@@ -19,5 +19,9 @@ init(_Args) ->
 	   {bahost_analyzer, {bahost_analyzer, start_link, []},
             permanent, brutal_kill, worker, [bahost_analyzer]},
 	   {bahost_mon, {bahost_mon, start_link, []},
-            permanent, brutal_kill, worker, [bahost_mon]}
+            permanent, brutal_kill, worker, [bahost_mon]},
+	   {puppetca_analyzer, {puppetca_analyzer, start_link, []},
+            permanent, brutal_kill, worker, [puppetca_analyzer]},
+	   {puppetca_mon, {puppetca_mon, start_link, []},
+            permanent, brutal_kill, worker, [puppetca_mon]}
 	  ]}}.

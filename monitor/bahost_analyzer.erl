@@ -20,11 +20,11 @@ test2() -> [ #bahost{mac = "00:0C:29:43:0B:FC",
 
 start_link() ->
     Pid = proc_lib:spawn_link(fun() -> listener(dict:new()) end),
-    register(analyzer, Pid),
+    register(bahost_analyzer, Pid),
     {ok, Pid}.
 
 analyze(Data) ->
-    analyzer ! Data.
+    bahost_analyzer ! Data.
 
 listener(Dict) ->
     receive
