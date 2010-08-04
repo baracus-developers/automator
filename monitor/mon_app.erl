@@ -13,6 +13,7 @@ start(_Type, _StartArgs) ->
     gen_event:add_handler(machine_events, machine_logger, []),
     gen_event:add_handler(host_events, host_logger, []),
     gen_event:add_handler(host_events, host_state, []),
+    gen_event:add_handler(host_events, provisioner, []),
     Ret.
 
 stop(_State) -> ok.

@@ -30,5 +30,14 @@ handle_event(Event, State) ->
     error_logger:info_msg("Unexpected event: ~p~n", [Event]),
     {ok, State}.
 
+provision(Mac, Personality) ->
+    gen_fsm:sync_send_event(mac2id(Mac), {command, provision, Personality}).
+
+poweron(Mac) ->
+    gen_fsm:sync_send_event(mac2id(Mac), {command, poweron}).
+
+poweroff(Mac) ->
+    gen_fsm:sync_send_event(mac2id(Mac), {command, poweroff}).
+
 terminate(_Args, _State) ->
     ok.
