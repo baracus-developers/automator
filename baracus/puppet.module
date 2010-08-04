@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+repo="http://download.opensuse.org/repositories/home:/ghaskins:/puppet/openSUSE_11.2/"
+zypper -n ar -f -c $repo puppet
+zypper -n --no-gpg-checks in puppet
+
+modifyconf() {
+	tmp=$(mktemp)
+	cat /etc/puppet/puppet.conf | sed -e $1 > $tmp
+	mv $tmp /etc/puppet/puppet.conf
+}
+
+server=baracus.__DNSDOMAIN__
+
+modifyconf "s/\[main\]/\[main\]\n\tpluginsync=true/"
+modifyconf "s/\[agent\]/\[agent\]\n\tserver=$server/"
+
+while true; do
+	puppetd --test >> /var/log/puppet/init.log;
+	if [ $? == 0 ]; then
+ 		break;
+	fi;
+	sleep 5;
+done
+
+chkconfig puppet on
+service puppet start
