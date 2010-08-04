@@ -5,7 +5,7 @@
 start(_Type, _StartArgs) ->
     Monitor = 'monitor@baracus', %FIXME
  
-    {ok, F} = file:open("/etc/murdock-id", [read]),
+    {ok, F} = file:open("/etc/cloudbuilder-id", [read]),
     Cookie = io:get_line(F, ""),
     file:close(F),
 

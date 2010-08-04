@@ -3,7 +3,7 @@
 -export([start/2, stop/1]).
 
 start(_Type, _StartArgs) ->
-    {ok, F} = file:open("/etc/murdock-id", [read]),
+    {ok, F} = file:open("/etc/cloudbuilder-id", [read]),
     Cookie = io:get_line(F, ""),
     file:close(F),
     
