@@ -19,7 +19,11 @@ start(_Type, _StartArgs) ->
 stop(_State) -> ok.
 
 run_once() ->
-    mnesia:create_schema([node()]),
+    
+    Nodes = [node()],
+
+    mnesia:create_schema(Nodes),
     mnesia:start(),
-    bahost_analyzer:run_once(),
-    puppetca_analyzer:run_once().
+
+    bahost_mon:run_once(Nodes),
+    puppetca_mon:run_once(Nodes).

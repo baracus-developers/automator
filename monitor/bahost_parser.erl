@@ -56,11 +56,11 @@ parseline(Line) ->
 	{match, [CapturedMac]} ->
 	    if
 		Mac =:= CapturedMac ->
-		    #bahost{mac = Mac,
-			    pxecurr = list_to_atom(PxeCurr),
-			    pxenext = list_to_atom(PxeNext),
-			    state = list_to_atom(State),
-			    active = list_to_atom(Active)};
+		    {Mac, #bahost{mac = Mac,
+				  pxecurr = list_to_atom(PxeCurr),
+				  pxenext = list_to_atom(PxeNext),
+				  state = list_to_atom(State),
+				  active = list_to_atom(Active)}};
 		true ->
 		    erlang:error("Failed to parse data stream")
 	    end;

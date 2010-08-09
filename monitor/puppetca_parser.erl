@@ -38,7 +38,7 @@ parseline(Line) ->
 	{match, [CapturedFingerprint]} ->
 	    if
 		CertEntry#certentry.fingerprint =:= CapturedFingerprint ->
-		    CertEntry;
+		    {CertEntry#certentry.host, CertEntry};
 		true ->
 		    erlang:error({"Partial valid fingerprint",
 				  {item, CertEntry},
