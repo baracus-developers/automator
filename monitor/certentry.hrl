@@ -1,2 +1,2 @@
 
--record(certentry, {type, host, fingerprint}).
+-record(certentry, {host, type, fingerprint}).

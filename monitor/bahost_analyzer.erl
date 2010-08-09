@@ -1,6 +1,6 @@
 -module(bahost_analyzer).
 -include_lib("bahost_record.hrl").
--export([start_link/0, analyze/1]).
+-export([run_once/0, start_link/0, analyze/1]).
 
 test1() -> [ #bahost{mac = "00:0C:29:43:0B:FC",
 		     pxecurr = localboot,
@@ -18,36 +18,58 @@ test2() -> [ #bahost{mac = "00:0C:29:43:0B:FC",
 		     state = build,
 		     active = enabled}].
 
+run_once() ->
+    io:format("Initializing puppetca table~n"),
+    {atomic, ok} = mnesia:create_table(bahost,
+				       [
+					{record_name, bahost},
+					{attributes,
+					 record_info(fields, bahost)},
+					{disc_copies, [node()]}
+				       ]).
+
 start_link() ->
-    Pid = proc_lib:spawn_link(fun() -> listener(dict:new()) end),
+    Pid = proc_lib:spawn_link(fun() -> listener_init() end),
     register(bahost_analyzer, Pid),
     {ok, Pid}.
 
 analyze(Data) ->
     bahost_analyzer ! Data.
 
-listener(Dict) ->
+listener_init() ->
+    ok = mnesia:wait_for_tables([bahost], 20000),
+    listener().
+
+listener() ->
     receive
 	Data ->
-	    NextDict = process(Dict, Data),
-	    listener(NextDict)
+	    process(Data),
+	    listener()
     end.
 
-process(Dict, [H | T]) ->
+process([H | T]) ->
     Mac = H#bahost.mac,
-    case dict:find(Mac, Dict) of
-	{ok, Value} ->
-	    if
-		Value =/= H ->
-		    gen_event:notify(host_events, {baracus, update, Mac, Value, H}),
-		    process(dict:store(Mac, H, Dict), T);
-		true ->
-		    process(Dict, T)
-	    end;
-	error ->
-	    gen_event:notify(host_events, {baracus, add, Mac, H}),
-	    process(dict:store(Mac, H, Dict), T)
-    end;
-process(Dict, []) ->
-    Dict.
+    F = fun() ->
+		case mnesia:read({bahost, Mac}) of
+		    [] ->
+			mnesia:write(H),
+			add;
+		    [H] ->
+			noop;
+		    [Value] ->
+			mnesia:write(H),
+			{update, Value}
+		end
+	end,
+    case mnesia:transaction(F) of
+	{atomic, add} ->
+	    gen_event:notify(host_events, {baracus, add, Mac, H});
+	{atomic, {update, Value}} ->
+	    gen_event:notify(host_events, {baracus, update, Mac, Value, H});
+	{atomic, noop} ->
+	    void
+    end,
+    process(T);
+process([]) ->
+    void.
 

@@ -1,38 +1,73 @@
 -module(puppetca_analyzer).
 -include_lib("certentry.hrl").
--export([start_link/0, analyze/1]).
+-export([run_once/0, start_link/0, analyze/1]).
+
+run_once() ->
+    io:format("Initializing puppetca table~n"),
+    {atomic, ok} = mnesia:create_table(puppetca,
+				       [
+					{record_name, certentry},
+					{attributes,
+					 record_info(fields, certentry)},
+					{disc_copies, [node()]}
+				       ]).
 
 start_link() ->
-    Pid = proc_lib:spawn_link(fun() -> listener(dict:new()) end),
+    Pid = proc_lib:spawn_link(fun() -> listener_init() end),
     register(puppetca_analyzer, Pid),
+    %spawn(fun() -> tracer_init(Pid) end),
     {ok, Pid}.
+
+tracer_init(Pid) ->
+    erlang:trace(Pid, true, [all]),
+    tracer().
+
+tracer() ->
+    receive
+	Trace ->
+	    io:format("TRACE: ~p~n", [Trace])
+    end,
+    tracer().
 
 analyze(Data) ->
     puppetca_analyzer ! Data.
 
-listener(Dict) ->
+listener_init() ->
+    ok = mnesia:wait_for_tables([puppetca], 20000),
+    listener().
+
+listener() ->
     receive
 	Data ->
-	    NextDict = process(Dict, Data),
-	    listener(NextDict)
+	    process(Data),
+	    listener()
     end.
 
-process(Dict, [H | T]) ->
+process([H | T]) ->
     Host = H#certentry.host,
-    case dict:find(Host, Dict) of
-	{ok, Value} ->
-	    if
-		Value =/= H ->
-		    gen_event:notify(machine_events,
-				     {puppetca, update, Host, Value, H}),
-		    process(dict:store(Host, H, Dict), T);
-		true ->
-		    process(Dict, T)
-	    end;
-	error ->
-	    gen_event:notify(machine_events, {puppetca, add, Host, H}),
-	    process(dict:store(Host, H, Dict), T)
-    end;
-process(Dict, []) ->
-    Dict.
+    F = fun() ->
+		case mnesia:read({puppetca, Host}) of
+		    [] ->
+			mnesia:write(puppetca, H, write),
+			add;
+		    [H] ->
+			noop;
+		    [Value] ->
+			mnesia:write(puppetca, H, write),
+			{update, Value}
+		end
+	end,
+    case mnesia:transaction(F) of
+	{atomic, add} ->
+	    gen_event:notify(machine_events, {puppetca, add, Host, H});
+	{atomic, {update, Value}} ->
+	    gen_event:notify(machine_events,
+			     {puppetca, update, Host, Value, H});	
+	{atomic, noop} ->
+	    void
+    end,
+    process(T);
+process([]) ->
+    void.
+
 

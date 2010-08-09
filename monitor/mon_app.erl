@@ -1,6 +1,6 @@
 -module(mon_app).
 -behavior(application).
--export([start/2, stop/1]).
+-export([start/2, stop/1, run_once/0]).
 
 start(_Type, _StartArgs) ->
     {ok, F} = file:open("/etc/cloudbuilder-id", [read]),
@@ -17,3 +17,9 @@ start(_Type, _StartArgs) ->
     Ret.
 
 stop(_State) -> ok.
+
+run_once() ->
+    mnesia:create_schema([node()]),
+    mnesia:start(),
+    bahost_analyzer:run_once(),
+    puppetca_analyzer:run_once().
