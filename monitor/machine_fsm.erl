@@ -68,14 +68,14 @@ agent_join(reset, State) ->
 agent_join({agent, online, _Since}, State) ->
     {next_state, online, State};
 agent_join(timeout, State) ->
-    alarm_handler:set_alarm(State#state.id,
-			    "Timeout waiting for ONLINE state"),
+    alarm_handler:set_alarm({State#state.id,
+			    "Timeout waiting for ONLINE state"}),
     {next_state, failed, State}.
 
 online(reset, State) ->
     {next_state, building, State};
 online({agent, offline}, State) ->
-    alarm_handler:set_alarm(State#state.id, "Unexpected OFFLINE state"),
+    alarm_handler:set_alarm({State#state.id, "Unexpected OFFLINE state"}),
     {next_state, offline, State}.
 
 offline(reset, State) ->
