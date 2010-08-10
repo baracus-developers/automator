@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Usage: ./fusion-fence [start|stop|reset|status] host /path/to/vm
+#
+# Example: ./fusion-fence start greg "/Volumes/Data/ghaskins/Virtual\ Machines.localized/Baracus\ Client\ #1.vmwarevm"
+#
+# (starts a VM named "Baracus Client #1" on the host "greg")
+
+
+TOOL="/Library/Application\ Support/VMware\ Fusion/vmrun"
+CMD=$1
+HOST=$2
+VM=$3
+
+case "$CMD" in
+    start)
+	ssh $HOST "$TOOL start $VM"
+	;;
+    stop)
+	ssh $HOST "$TOOL stop $VM"
+	;;
+    reset)
+	ssh $HOST "$TOOL reset $VM"
+	;;
+    status)
+	;;
+    list)
+	ssh $HOST "$TOOL list"
+	;;
+esac
+
