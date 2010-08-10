@@ -44,6 +44,7 @@ handle_provision(Personality, State) ->
     Hostname = string:concat("cloudbuilder-", 
 			     lists:map(fun(X) -> subst($:, $-, X) end, Mac)),
 
+    machine_fsm:create(Hostname),
     baracus_driver:provision(Mac, Hostname, Personality),
 
     Domainname = ".laurelwood.net", %FIXME
@@ -51,7 +52,8 @@ handle_provision(Personality, State) ->
 
     PersonalityStatus = State#state.personality,
     {reply, ok, building,
-     State#state{personality = PersonalityStatus#status{admin = Personality}}}.
+     State#state{personality = PersonalityStatus#status{admin = Personality},
+		 hostname = Hostname}}.
 
 handle_reprovision(Personality, State) ->
     PersonalityStatus = State#state.personality,
@@ -74,6 +76,7 @@ handle_poweron(State) ->
     end.
 
 handle_poweroff(State) ->
+    machine_fsm:poweroff(State#state.hostname),
     baracus_driver:poweroff(State#state.mac),
     {reply, ok, deepsleep, State}.
 
@@ -147,6 +150,8 @@ building({baracus_state_change, building}, State) ->
 building({baracus_state_change, localboot}, State) ->
     {next_state, building, State};
 building({baracus_state_change, built}, State) ->
+    machine_fsm:built(State#state.hostname),
+
     PersonalityStatus = State#state.personality,
     AdminStatus = PersonalityStatus#status.admin,
     % operstatus is now equal to adminstatus, so update our state
