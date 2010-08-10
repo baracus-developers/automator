@@ -41,14 +41,13 @@ sleepyness() -> 60000.
 
 handle_provision(Personality, State) ->
     Mac = State#state.mac,
-    Hostname = string:concat("cloudbuilder-", 
-			     lists:map(fun(X) -> subst($:, $-, X) end, Mac)),
+    Hostname = string:to_lower(string:concat("cloudbuilder-", 
+					     lists:map(fun(X) -> subst($:, $-, X) end, Mac))),
 
     machine_fsm:create(Hostname),
     baracus_driver:provision(Mac, Hostname, Personality),
 
-    Domainname = ".laurelwood.net", %FIXME
-    puppetca_driver:clear(string:concat(Hostname, Domainname)),
+    puppetca_driver:clear(Hostname),
 
     PersonalityStatus = State#state.personality,
     {reply, ok, building,

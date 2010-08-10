@@ -2,7 +2,9 @@
 -export([clear/1, sign/1]).
 
 cmd(Option, Host) ->
-    Cmd = io_lib:format("puppetca ~s ~s", [Option, Host]),
+    Domain = ".laurelwood.net", %FIXME
+    Cmd = io_lib:format("puppetca ~s ~s", [Option,
+					   string:concat(Host, Domain)]),
     os:cmd(Cmd).    
 
 clear(Host) ->
