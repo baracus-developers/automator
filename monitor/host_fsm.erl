@@ -163,7 +163,7 @@ running({command, provision, Personality}, _From, State) ->
 running({command, poweroff}, _From, State) ->
     handle_poweroff(State);
 running({command, poweron}, _From, State) ->
-    {reply, {error, "Already running"}, building, State}.
+    {reply, {error, "Already running"}, running, State}.
 
 
 
