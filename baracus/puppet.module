@@ -15,15 +15,8 @@ modifyconf() {
 server=baracus.__DNSDOMAIN__
 
 modifyconf "s/\[main\]/\[main\]\n\tpluginsync=true/"
+modifyconf "s/\[agent\]/\[agent\]\n\twaitforcert=5/"
 modifyconf "s/\[agent\]/\[agent\]\n\tserver=$server/"
-
-while true; do
-	puppetd --test >> /var/log/puppet/init.log;
-	if [ $? == 0 ]; then
- 		break;
-	fi;
-	sleep 5;
-done
 
 chkconfig puppet on
 service puppet start
