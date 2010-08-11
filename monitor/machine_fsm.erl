@@ -43,13 +43,13 @@ create(Host) ->
 building({agent, offline}, State) ->
     {next_state, building, State};
 building(built, State) ->
-    {next_state, puppet_join, State, 120000}.
+    {next_state, puppet_join, State, 180000}.
 
 puppet_join(reset, State) ->
     {next_state, building, State};
 puppet_join({puppetca, join_request}, State) ->
     puppetca_driver:sign(State#state.hostname),
-    {next_state, agent_join, State, 120000};
+    {next_state, agent_join, State, 300000};
 puppet_join(timeout, State) ->
     alarm_handler:set_alarm({State#state.id,
 			     "Timeout waiting for puppet join request"}), 
