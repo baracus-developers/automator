@@ -236,11 +236,11 @@ wget http://__SERVERIP__/ba/built?uuid=__UUID__\&hostname=__HOSTNAME__]]></sourc
     </yesno_messages>
   </report>
   <software>
+    <packages config:type="list">
+      <package>wget</package>
+    </packages>
     <patterns config:type="list">
       <pattern>base</pattern>
-      <pattern>non_oss</pattern>
-      <pattern>sw_management</pattern>
-      <pattern>yast2_basis</pattern>
     </patterns>
   </software>
   <login_settings/>
