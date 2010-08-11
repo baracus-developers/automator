@@ -21,8 +21,15 @@ send_event(Host, Event) ->
 reset(Host) ->
     send_event(Host, reset).
 
+poweron(Host) ->
+    send_event(Host, poweron).
+
 poweroff(Host) ->
     send_event(Host, poweroff).
+
+terminate(Host) ->
+    Id = host2id(Host),
+    ok = gen_fsm:sync_send_all_state_event(Id, terminate).
 
 built(Host) ->
     send_event(Host, built).
@@ -84,3 +91,7 @@ offline(reset, State) ->
 offline({agent, online, _Since}, State) ->
     alarm_handler:clear_alarm(State#state.id),
     {next_state, online, State}.
+
+handle_sync_event(terminate, StateName, State) ->
+    puppetca_driver:clear(State#state.hostname),
+    {stop, terminated, ok, State}.

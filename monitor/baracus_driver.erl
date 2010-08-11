@@ -4,6 +4,10 @@
 status(Mac) ->
 	void.
 
+configure_power(Mac, Config) ->
+    gen_event:notify(host_events, {baracus, power_configured, Mac}),
+    void.
+
 provision(Mac, Hostname, default) ->
     Cmd = io_lib:format("bado build --mac ~s --profile sumatra --ip dhcp --hostname ~s --module=puppet", [Mac, Hostname]),
     gen_event:notify(host_events, {policy, provision, Mac, Hostname}),

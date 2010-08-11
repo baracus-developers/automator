@@ -63,8 +63,11 @@ handle_event({agent, offline, Agent}, State) ->
 handle_event(Event, State) ->
     {ok, State}.
 
+configure_power(Mac, Config) ->
+    gen_fsm:sync_send_event(mac2id(Mac), {command, {configure_power, Config}}).
+
 provision(Mac, Personality) ->
-    gen_fsm:sync_send_event(mac2id(Mac), {command, provision, Personality}).
+    gen_fsm:sync_send_event(mac2id(Mac), {command, {provision, Personality}}).
 
 poweron(Mac) ->
     gen_fsm:sync_send_event(mac2id(Mac), {command, poweron}).

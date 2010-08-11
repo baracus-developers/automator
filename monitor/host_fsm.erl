@@ -37,47 +37,40 @@ subst(Old, New, Data) ->
 	    Data
     end.
 
-sleepyness() -> 60000.
+mac2hostname(Mac) ->
+    Hostname = string:concat("cloudbuilder-", 
+			     lists:map(fun(X) -> subst($:, $-, X) end, Mac)),
+    string:to_lower(Hostname).
 
 handle_provision(Personality, State) ->
     Mac = State#state.mac,
-    Hostname = string:to_lower(string:concat("cloudbuilder-", 
-					     lists:map(fun(X) -> subst($:, $-, X) end, Mac))),
+    Hostname = mac2hostname(Mac),
 
     machine_fsm:create(Hostname),
     baracus_driver:provision(Mac, Hostname, Personality),
 
-    puppetca_driver:clear(Hostname),
-
     PersonalityStatus = State#state.personality,
-    {reply, ok, building,
-     State#state{personality = PersonalityStatus#status{admin = Personality},
-		 hostname = Hostname}}.
+    {ok, State#state{personality = PersonalityStatus#status{admin = Personality},
+		     hostname = Hostname}}.
 
 handle_reprovision(Personality, State) ->
     PersonalityStatus = State#state.personality,
     if
 	Personality =/= PersonalityStatus#status.admin ->
-	    Reply = handle_provision(Personality, State),
-	    baracus_driver:powercycle(State#state.mac),
-	    Reply;
+	    machine_fsm:terminate(State#state.hostname),
+	    handle_provision(Personality, State);
 	true ->
-	    {reply, ok, building, State}
+	    nochange
     end.    
 
-handle_poweron(State) ->
-    PersonalityStatus = State#state.personality,
-    if
-	PersonalityStatus#status.oper =/= PersonalityStatus#status.admin ->
-	    handle_provision(PersonalityStatus#status.admin, State);
-	true ->
-	    {reply, ok, running, State}
-    end.
-
-handle_poweroff(State) ->
-    machine_fsm:poweroff(State#state.hostname),
-    baracus_driver:poweroff(State#state.mac),
-    {reply, ok, deepsleep, State}.
+illegal_command(Command, StateName, State) ->
+    {reply,
+     {error, {"Illegal command for state",
+	      {state, StateName},
+	      {command, Command}
+	     }
+     },
+     StateName, State}.    
 
 %------------------------------------------------------
 % DISCOVERY: We enter this state while we wait for
@@ -87,60 +80,55 @@ discovery({baracus_state_change, register}, State) ->
     Mac = State#state.mac,
     Inventory = baracus_driver:get_inventory(Mac),
     gen_event:notify(host_events, {system, discovery, {Mac, Inventory}}),
-    error_logger:info_msg("Discovered ~p, powering down in ~pms~n",
-			  [Mac, sleepyness()]),
-    {next_state, sleepy, State, sleepyness()}.
+    {next_state, wait, State}.
 
 %------------------------------------------------------
-% SLEEPY: We enter this state for N seconds after discovery
-% to give automation systems a chance to invoke {command, provision}
-% before we actually power down the node.  Once we time-out, we
-% enter DEEPSLEEP
+% WAIT: We enter this state while we wait for
+% a higher layer to configure our power subsystem
 %------------------------------------------------------
-sleepy({command, provision, Personality}, _From, State) ->
-    handle_provision(Personality, State);
-sleepy({command, poweron}, _From, State) ->
-    handle_poweron(State);
-sleepy({command, poweroff}, _From, State) ->
+wait({command, {configure_power, Config}}, _From, State) ->
+    baracus_driver:configure_power(State#state.mac, Config),
     baracus_driver:poweroff(State#state.mac),
-    {reply, ok, deepsleep, State}.
-
-sleepy(timeout, State) ->
-    baracus_driver:poweroff(State#state.mac),
-    {next_state, deepsleep, State}.
+    {reply, ok, dark, State};
+wait({command, Command}, _From, State) ->
+    illegal_command(Command, wait, State).
 
 %------------------------------------------------------
-% DEEPSLEEP: Node is powered down and can only be awoken
-% by a {command, provision} or {command, poweron} event
+% DARK: Node is powered down and can only be awoken
+% by a {command, provision} event
 %------------------------------------------------------
-deepsleep({command, provision, Personality}, _From, State) ->
-    NextState = handle_provision(Personality, State),
+dark({command, {provision, Personality}}, _From, State) ->
+    {ok, NextState} = handle_provision(Personality, State),
     baracus_driver:poweron(State#state.mac),
-    NextState;
-deepsleep({command, poweron}, _From, State) ->
-    NextState = handle_poweron(State),
-    baracus_driver:poweron(State#state.mac),
-    NextState;
-deepsleep({command, poweroff}, _From, State) ->
-    {reply, {error, "Already powered down"}, deepsleep, State}.
+    {reply, ok, building, NextState};
+dark({command, Command}, _From, State) ->
+    illegal_command(Command, dark, State).
 
-deepsleep({baracus_state_change, _}, State) ->
-    {next_state, deepsleep, State}.
+dark({baracus_state_change, _}, State) ->
+    {next_state, dark, State}.
 
 %------------------------------------------------------
 % BUILDING: Node is powered on and in the process of
 % being imaged.  We will transition to RUNNING once
 % we receive a BUILT state from Baracus.  We will
-% transition to DEEPSLEEP if a {command, poweroff} arrives.
+% transition to SLEEP if a {command, poweroff} arrives.
 % Finally, we will powercycle the node if a
 % {command, provision} arrives but remain in BUILDING
 %------------------------------------------------------
-building({command, provision, Personality}, _From, State) ->
-    handle_reprovision(Personality, State);
+building({command, {provision, Personality}}, _From, State) ->
+    case handle_reprovision(Personality, State) of
+	nochange ->
+	    {reply, ok, building, State};
+	{ok, NextState} ->
+	    baracus_driver:powercycle(State#state.mac),
+	    {reply, ok, building, NextState}
+    end;
 building({command, poweroff}, _From, State) ->
-    handle_poweroff(State);
-building({command, poweron}, _From, State) ->
-    {reply, {error, "Already running"}, building, State}.
+    machine_fsm:terminate(State#state.hostname),
+    baracus_driver:poweroff(State#state.mac),
+    {reply, ok, dark, State};
+building({command, Command}, _From, State) ->
+    illegal_command(Command, building, State).
 
 building({baracus_state_change, build}, State) ->
     {next_state, building, State};
@@ -157,12 +145,46 @@ building({baracus_state_change, built}, State) ->
     NewPersonalityStatus = PersonalityStatus#status{oper = AdminStatus},
     {next_state, running, State#state{personality = NewPersonalityStatus}}.
 
-running({command, provision, Personality}, _From, State) ->
-    handle_reprovision(Personality, State);
+%------------------------------------------------------
+% RUNNING: Node is operational
+%------------------------------------------------------
+running({command, {provision, Personality}}, _From, State) ->
+    case handle_reprovision(Personality, State) of
+	nochange ->
+	    {reply, ok, building, State};
+	{ok, NextState} ->
+	    baracus_driver:powercycle(State#state.mac),
+	    {reply, ok, building, NextState}
+    end;
 running({command, poweroff}, _From, State) ->
-    handle_poweroff(State);
-running({command, poweron}, _From, State) ->
-    {reply, {error, "Already running"}, running, State}.
+    machine_fsm:poweroff(State#state.hostname),
+    baracus_driver:poweroff(State#state.mac),
+    {reply, ok, sleep, State};
+running({command, Command}, _From, State) ->
+    illegal_command(Command, running, State).
+
+%------------------------------------------------------
+% SLEEP: Node is powered down and can only be awoken
+% by a {command, provision} or {command, poweron} event
+%------------------------------------------------------
+sleep({command, {provision, Personality}}, _From, State) ->
+    case handle_reprovision(Personality, State) of
+	nochange ->
+	    {reply, ok, building, State};
+	{ok, NextState} ->
+	    baracus_driver:poweron(State#state.mac),
+	    {reply, ok, building, NextState}
+    end;
+sleep({command, poweron}, _From, State) ->
+    machine_fsm:poweron(State#state.hostname),
+    baracus_driver:poweron(State#state.mac),
+    {reply, ok, running, State};
+sleep({command, Command}, _From, State) ->
+    illegal_command(Command, sleep, State).
+
+sleep({baracus_state_change, _}, State) ->
+    {next_state, sleep, State}.
+
 
 
 
