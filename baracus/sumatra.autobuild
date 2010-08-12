@@ -15,8 +15,14 @@
     <init-scripts config:type="list">
       <script>
         <filename>build_notify</filename>
-        <source><![CDATA[sleep 60
-wget http://__SERVERIP__/ba/built?uuid=__UUID__\&hostname=__HOSTNAME__]]></source>
+        <source><![CDATA[while true; do
+ wget http://__SERVERIP__/ba/built?uuid=__UUID__\&hostname=__HOSTNAME__;
+ if [ $? -eq 0 ]; then
+   break
+ fi
+ sleep 5
+done
+]]></source>
       </script>
       __MODULE__
       <script>
