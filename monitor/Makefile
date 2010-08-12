@@ -8,6 +8,7 @@ SRCS += $(shell find *.erl)
 OBJS = $(patsubst %.erl,$(EBINDIR)/%.beam,$(SRCS))
 WSMODULES = $(patsubst %.erl,%, $(SRCS))
 MODULES = $(subst $(space),$(commaspace), $(WSMODULES))
+INCLUDES += -I/usr/lib
 
 all: application release
 
@@ -25,12 +26,12 @@ $(EBINDIR)/%.beam: %.erl Makefile
 	@touch monitor.app
 	@echo "Compiling (Erlang) $< to $@"
 	@mkdir -p $(EBINDIR)
-	@erlc -o $(EBINDIR) $<
+	@erlc $(INCLUDES) -o $(EBINDIR) $<
 
 $(OBJDIR)/monitor.boot: monitor.rel application
 	@echo "Compiling (Release) $< to $@"
 	@mkdir -p $(OBJDIR)
-	@erlc -pa $(EBINDIR) -o $(OBJDIR) $<
+	@erlc -pa /usr/lib/yaws/ebin -pa $(EBINDIR) -o $(OBJDIR) $<
 
 clean: 
 	@rm -f *~

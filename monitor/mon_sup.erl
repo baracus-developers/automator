@@ -1,12 +1,12 @@
 -module(mon_sup).
 -behavior(supervisor).
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1]).
 
-start_link() ->
-    supervisor:start_link({local, mon_sup}, mon_sup, []).
+start_link(Port) ->
+    supervisor:start_link({local, mon_sup}, mon_sup, [Port]).
 
-init(_Args) ->
+init(Port) ->
     {ok, {{one_for_one, 1, 60},
           [{agentmon, {agentmon, start_link, []},
             permanent, brutal_kill, worker, [agentmon]},
@@ -23,5 +23,8 @@ init(_Args) ->
 	   {puppetca_analyzer, {puppetca_mon, start_delta_link, []},
             permanent, brutal_kill, worker, [puppetca_mon]},
 	   {puppetca_mon, {puppetca_mon, start_poller_link, []},
-            permanent, brutal_kill, worker, [puppetca_mon]}
+            permanent, brutal_kill, worker, [puppetca_mon]},
+	   {api_server,
+	    {api_server, start_link, [Port]},
+	    permanent, 5000, worker, [api_server]}
 	  ]}}.

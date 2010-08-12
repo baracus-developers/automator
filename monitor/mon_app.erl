@@ -9,7 +9,10 @@ start(_Type, _StartArgs) ->
     
     erlang:set_cookie(node(), list_to_atom(Cookie)),
 
-    Ret = mon_sup:start_link(),
+    %{ok, Port} = application:get_env(?MODULE, port),
+    Port = 8000,
+
+    Ret = mon_sup:start_link(Port),
     gen_event:add_handler(machine_events, event_logger, []),
     gen_event:add_handler(host_events, event_logger, []),
     gen_event:add_handler(host_events, host_state, []),
