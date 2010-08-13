@@ -107,7 +107,7 @@ handle_poweroff(Mac) ->
 
 initialize(timeout, State) ->
     Mac = State#state.mac,
-    {ok, BaracusState} = bahost_mon:get_state(Mac),
+    {ok, BaracusState} = baracus_driver:get_state(Mac),
     {ok, Record} = get_record(Mac),
 
     error_logger:info_msg("~p: (Re)starting with Record: ~p BaracusState: ~p~n",

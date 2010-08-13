@@ -1,5 +1,19 @@
 -module(puppetca_driver).
--export([clear/1, sign/1]).
+-export([run_once/1, start_link/0, refresh/0, clear/1, sign/1]).
+
+tablename() -> puppetca.
+
+run_once(Nodes) ->
+    io:format("Initializing puppetca table~n"),
+    {atomic, ok} = delta_keyvalue:run_once(tablename(), Nodes).
+
+start_link() ->
+    delta_keyvalue:start_link(tablename()).
+ 
+refresh() ->
+    RawData = os:cmd("puppetca -l --all"),
+    Data = puppetca_parser:process(RawData),
+    delta_keyvalue:analyze(tablename(), Data).
 
 cmd(Option, Host) ->
     Domain = ".laurelwood.net", %FIXME
@@ -18,4 +32,6 @@ sign(Host) ->
     cmd("-s", Host),
 
     ok.
-    
+
+
+

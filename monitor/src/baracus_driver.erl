@@ -1,8 +1,18 @@
 -module(baracus_driver).
+-include_lib("bahost_record.hrl").
 -compile(export_all).
 
+tablename() -> bahost.
+
+run_once(Nodes) ->
+    io:format("Initializing bahost table~n"),
+    {atomic, ok} = delta_keyvalue:run_once(tablename(), Nodes).
+
+start_link() ->
+    delta_keyvalue:start_link(tablename()).
+ 
 status(Mac) ->
-	void.
+    void.
 
 configure_power(Mac, Config) ->
     gen_event:notify(host_events, {baracus, power_configured, Mac}),
@@ -27,3 +37,16 @@ powercycle(Mac) ->
 
 get_inventory(Mac) ->
     "<inventory/>".
+
+refresh() ->
+    RawData = os:cmd("bahost list states"),
+    Data = bahost_parser:process(RawData),
+    delta_keyvalue:analyze(tablename(), Data).
+
+get_state(Mac) ->
+    case delta_keyvalue:find(tablename(), Mac) of
+	notfound ->
+	    notfound;
+	{ok, Record} ->
+	    {ok, Record#bahost.state}
+    end.
