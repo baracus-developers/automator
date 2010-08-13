@@ -29,6 +29,6 @@ run_once() ->
     mnesia:create_schema(Nodes),
     mnesia:start(),
 
-    host_server:run_once(Nodes),
+    hosts_server:run_once(Nodes),
     bahost_mon:run_once(Nodes),
     puppetca_mon:run_once(Nodes).

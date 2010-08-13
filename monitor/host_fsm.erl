@@ -1,25 +1,26 @@
 -module(host_fsm).
 -behavior(gen_fsm).
--include_lib("bahost_record.hrl").
+-include_lib("host_record.hrl").
 -export([init/1, discovery/2]).
 -compile(export_all).
 
--record(status, {oper, admin}).
--record(state, {id, mac, 
-		hostname,
-		personality
-	       }).
+-record(state, {mac}).
 
 init([Id, Mac]) ->
-    {ok, discovery,
-     #state{id = Id,
-	    mac = Mac,
-	    personality = #status{oper = none, admin = default}
-	   }
-    }.
+    {ok, BaracusState} = bahost_mon:get_state(Mac),
+    {ok, Record} = get_record(Mac),
+
+    init(Id, Record, BaracusState).
+
+init(Id, Record, inventory) ->
+    {ok, discovery, #state{mac = Record#host.mac}};
+init(Id, Record, built) ->
+    {ok, running, #state{mac = Record#host.mac}}.
+
+%------------------------------------------------------------------------
 
 sync_send_event(Mac, Event) ->
-    {ok, Id} = host_server:lookup({mac, Mac}),
+    {ok, Id} = hosts_server:lookup({mac, Mac}),
     gen_fsm:sync_send_event(Id, Event).
 
 configure_power(Mac, Config) ->
@@ -34,6 +35,8 @@ poweron(Mac) ->
 poweroff(Mac) ->
     sync_send_event(Mac, {command, poweroff}).
 
+%------------------------------------------------------------------------
+
 subst(Old, New, Data) ->
     case Data of
 	Old ->
@@ -42,31 +45,53 @@ subst(Old, New, Data) ->
 	    Data
     end.
 
-mac2hostname(Mac) ->
+compute_hostname(Mac) ->
     Hostname = string:concat("cloudbuilder-", 
 			     lists:map(fun(X) -> subst($:, $-, X) end, Mac)),
     string:to_lower(Hostname).
 
+get_record(State) when erlang:is_record(State, state) ->
+    Mac = State#state.mac,
+    get_record(Mac);
+get_record(Mac) ->
+    F = fun() ->
+		mnesia:read(hosts, Mac, read)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, [Record]} when is_record(Record, host) ->
+	    {ok, Record}
+    end.
+
+get_hostname(State) when erlang:is_record(State, state) ->
+    Mac = State#state.mac,
+    get_hostname(Mac);
+get_hostname(Mac) ->
+    {ok, Record} = get_record(Mac),
+    Record#host.hostname.
+
 handle_provision(Personality, State) ->
     Mac = State#state.mac,
-    Hostname = mac2hostname(Mac),
+    Hostname = compute_hostname(Mac),
 
     machine_fsm:create(Hostname),
     baracus_driver:provision(Mac, Hostname, Personality),
 
-    PersonalityStatus = State#state.personality,
-    {ok, State#state{personality = PersonalityStatus#status{admin = Personality},
-		     hostname = Hostname}}.
+    F = fun() ->
+		[Record] = mnesia:read(hosts, Mac, write),
+		mnesia:write(hosts,
+			     Record#host{personality = Personality,
+					 hostname = Hostname,
+					 power = on},
+			     write),
+		updated
+	end,
+    {atomic, updated} = mnesia:transaction(F),
+    ok.
 
 handle_reprovision(Personality, State) ->
-    PersonalityStatus = State#state.personality,
-    if
-	Personality =/= PersonalityStatus#status.admin ->
-	    machine_fsm:terminate(State#state.hostname),
-	    handle_provision(Personality, State);
-	true ->
-	    nochange
-    end.    
+    Hostname = get_hostname(State),
+    machine_fsm:terminate(Hostname),
+    handle_provision(Personality, State).
 
 illegal_command(Command, StateName, State) ->
     {reply,
@@ -76,6 +101,17 @@ illegal_command(Command, StateName, State) ->
 	     }
      },
      StateName, State}.    
+
+handle_poweroff(Mac) ->
+    baracus_driver:poweroff(Mac),
+
+    F = fun() ->
+		[Record] = mnesia:read(hosts, Mac, write),
+		mnesia:write(hosts, Record#host{power = off}, write),
+		ok
+	end,
+    {atomic, ok} = mnesia:transaction(F),
+    ok.
 
 %------------------------------------------------------
 % DISCOVERY: We enter this state while we wait for
@@ -92,8 +128,9 @@ discovery({baracus_state_change, register}, State) ->
 % a higher layer to configure our power subsystem
 %------------------------------------------------------
 wait({command, {configure_power, Config}}, _From, State) ->
-    baracus_driver:configure_power(State#state.mac, Config),
-    baracus_driver:poweroff(State#state.mac),
+    Mac = State#state.mac,
+    baracus_driver:configure_power(Mac, Config),
+    handle_poweroff(Mac),
     {reply, ok, dark, State};
 wait({command, Command}, _From, State) ->
     illegal_command(Command, wait, State).
@@ -103,9 +140,10 @@ wait({command, Command}, _From, State) ->
 % by a {command, provision} event
 %------------------------------------------------------
 dark({command, {provision, Personality}}, _From, State) ->
-    {ok, NextState} = handle_provision(Personality, State),
-    baracus_driver:poweron(State#state.mac),
-    {reply, ok, building, NextState};
+    Mac = State#state.mac,
+    ok = handle_provision(Personality, State),
+    baracus_driver:poweron(Mac),
+    {reply, ok, building, State};
 dark({command, Command}, _From, State) ->
     illegal_command(Command, dark, State).
 
@@ -121,16 +159,17 @@ dark({baracus_state_change, _}, State) ->
 % {command, provision} arrives but remain in BUILDING
 %------------------------------------------------------
 building({command, {provision, Personality}}, _From, State) ->
-    case handle_reprovision(Personality, State) of
-	nochange ->
-	    {reply, ok, building, State};
-	{ok, NextState} ->
-	    baracus_driver:powercycle(State#state.mac),
-	    {reply, ok, building, NextState}
-    end;
+    Mac = State#state.mac,
+    handle_reprovision(Personality, Mac),
+    baracus_driver:powercycle(Mac),
+    {reply, ok, building, State};
 building({command, poweroff}, _From, State) ->
-    machine_fsm:terminate(State#state.hostname),
-    baracus_driver:poweroff(State#state.mac),
+    Mac = State#state.mac,
+    Hostname = get_hostname(Mac),
+
+    machine_fsm:terminate(Hostname),
+    handle_poweroff(Mac),
+
     {reply, ok, dark, State};
 building({command, Command}, _From, State) ->
     illegal_command(Command, building, State).
@@ -142,28 +181,29 @@ building({baracus_state_change, building}, State) ->
 building({baracus_state_change, localboot}, State) ->
     {next_state, building, State};
 building({baracus_state_change, built}, State) ->
-    machine_fsm:built(State#state.hostname),
+    Hostname = get_hostname(State),
 
-    PersonalityStatus = State#state.personality,
-    AdminStatus = PersonalityStatus#status.admin,
-    % operstatus is now equal to adminstatus, so update our state
-    NewPersonalityStatus = PersonalityStatus#status{oper = AdminStatus},
-    {next_state, running, State#state{personality = NewPersonalityStatus}}.
+    machine_fsm:built(Hostname),
+
+    {next_state, running, State}.
 
 %------------------------------------------------------
 % RUNNING: Node is operational
 %------------------------------------------------------
 running({command, {provision, Personality}}, _From, State) ->
-    case handle_reprovision(Personality, State) of
-	nochange ->
-	    {reply, ok, building, State};
-	{ok, NextState} ->
-	    baracus_driver:powercycle(State#state.mac),
-	    {reply, ok, building, NextState}
-    end;
+    Mac = State#state.mac,
+
+    handle_reprovision(Personality, Mac),
+    baracus_driver:powercycle(Mac),
+
+    {reply, ok, building, State};
 running({command, poweroff}, _From, State) ->
-    machine_fsm:poweroff(State#state.hostname),
-    baracus_driver:poweroff(State#state.mac),
+    Mac = State#state.mac,
+    Hostname = get_hostname(Mac),
+
+    machine_fsm:poweroff(Hostname),
+    handle_poweroff(Mac),
+
     {reply, ok, sleep, State};
 running({command, Command}, _From, State) ->
     illegal_command(Command, running, State).
@@ -173,16 +213,26 @@ running({command, Command}, _From, State) ->
 % by a {command, provision} or {command, poweron} event
 %------------------------------------------------------
 sleep({command, {provision, Personality}}, _From, State) ->
-    case handle_reprovision(Personality, State) of
-	nochange ->
-	    {reply, ok, building, State};
-	{ok, NextState} ->
-	    baracus_driver:poweron(State#state.mac),
-	    {reply, ok, building, NextState}
-    end;
+    Mac = State#state.mac,
+
+    handle_reprovision(Personality, Mac),
+    baracus_driver:poweron(Mac),
+
+    {reply, ok, building, State};
 sleep({command, poweron}, _From, State) ->
-    machine_fsm:poweron(State#state.hostname),
-    baracus_driver:poweron(State#state.mac),
+    Mac = State#state.mac,
+    Hostname = get_hostname(Mac),
+
+    machine_fsm:poweron(Hostname),
+    baracus_driver:poweron(Mac),
+
+    F = fun() ->
+		[Record] = mnesia:read(hosts, Mac, write),
+		mnesia:write(hosts, Record#host{power = on}, write),
+		ok
+	end,
+    {atomic, ok} = mnesia:transaction(F),
+
     {reply, ok, running, State};
 sleep({command, Command}, _From, State) ->
     illegal_command(Command, sleep, State).

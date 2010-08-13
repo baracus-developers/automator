@@ -20,10 +20,10 @@ join_request(FQDN) ->
     ok.
 
 handle_event({baracus, add, Mac, Record}, State) ->
-    host_server:create(Mac),
+    hosts_server:create(Mac),
     {ok, State};
 handle_event({baracus, update, Mac, Old, New}, State) ->
-    {ok, Id} = host_server:lookup({mac, Mac}),
+    {ok, Id} = hosts_server:lookup({mac, Mac}),
     gen_fsm:send_event(Id, {baracus_state_change, New#bahost.state}),
     {ok, State};
 handle_event({puppetca, add, FQDN, #certentry{type = request}}, State) ->

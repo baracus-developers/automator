@@ -38,7 +38,7 @@ create(Host) ->
     Id = host2id(Host),
     StartFunc = {gen_fsm, start_link,
 		 [{local, Id}, machine_fsm, [Id, Host], []]},
-    supervisor:start_child(mon_sup,
+    supervisor:start_child(hosts_sup,
 			   {Id,
 			    StartFunc,
 			    transient,

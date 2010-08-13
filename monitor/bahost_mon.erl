@@ -1,5 +1,6 @@
 -module(bahost_mon).
--export([run_once/1, start_poller_link/0, start_delta_link/0]).
+-include_lib("bahost_record.hrl").
+-export([run_once/1, start_poller_link/0, start_delta_link/0, get_state/1]).
 
 tablename() -> bahost.
 
@@ -28,3 +29,11 @@ poller() ->
     lists:map(fun(I) -> process(I) end, Delta),
     timer:sleep(5000),
     poller().
+
+get_state(Mac) ->
+    case delta_keyvalue:find(tablename(), Mac) of
+	notfound ->
+	    notfound;
+	{ok, Record} ->
+	    {ok, Record#bahost.state}
+    end.

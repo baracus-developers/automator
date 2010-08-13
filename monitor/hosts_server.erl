@@ -1,12 +1,11 @@
--module(host_server).
+-module(hosts_server).
 -behavior(gen_server).
+-include_lib("host_record.hrl").
 -export([run_once/1,
 	 start_link/0, init/1,
 	 create/1, lookup/1,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
-
--record(host, {mac, hostname}).
 
 run_once(Nodes) ->
     {atomic, ok} = mnesia:create_table(hosts,
@@ -21,7 +20,18 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
+    F = fun() ->
+		init_fsm(mnesia:first(hosts))
+	end,
+    {atomic, ok} = mnesia:transaction(F),
+
     {ok, unused}.
+
+init_fsm('$end_of_table') ->
+    ok;
+init_fsm(Mac) ->
+    {ok, _Id} = create_fsm(Mac),
+    init_fsm(mnesia:next(hosts)).
 
 mac2id(Mac) ->
     list_to_atom(string:concat("hostfsm-", Mac)).    
@@ -36,7 +46,7 @@ create_fsm(Mac) ->
     Id = mac2id(Mac),
     StartFunc = {gen_fsm, start_link,
 		 [{local, Id}, host_fsm, [Id, Mac], []]},
-    {ok, _} = supervisor:start_child(mon_sup,
+    {ok, _} = supervisor:start_child(hosts_sup,
 				     {Id,
 				      StartFunc,
 				      transient,
@@ -49,14 +59,20 @@ handle_call({create, Mac}, _From, State) ->
     F = fun() ->
 		case mnesia:read(hosts, Mac, write) of
 		    [] ->
-			mnesia:write(hosts, #host{mac = Mac}, write),
-			created;
+			Record = #host{
+			  mac = Mac,
+			  hostname = undefined,
+			  personality = undefined,
+			  power = undefined
+			 },
+			mnesia:write(hosts, Record, write),
+			{created, Record};
 		    [Record] ->
 			exists
 		end
 	end,
     case mnesia:transaction(F) of
-	{atomic, created} ->
+	{atomic, {created, _Record}} ->
 	    {ok, Id} = create_fsm(Mac),
 	    {reply, {ok, Id}, State};
 	{atomic, exists} ->

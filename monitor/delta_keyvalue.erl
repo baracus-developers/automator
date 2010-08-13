@@ -23,9 +23,22 @@ init(Table) ->
 analyze(Table, Data) ->
     gen_server:call(Table, {analyze, Data}).
 
+find(Table, Key) ->
+    gen_server:call(Table, {find, Key}).
+
 handle_call({analyze, Data}, _From, Table) ->
     ProcessedData = lists:map(fun(I) -> process(Table, I) end, Data),
-    {reply, [ X || X <- ProcessedData, X =/= void], Table}.
+    {reply, [ X || X <- ProcessedData, X =/= void], Table};
+handle_call({find, Key}, _From, Table) ->
+    F = fun() ->
+		 mnesia:read(Table, Key, read)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, []} ->
+	    {reply, notfound, Table};
+	{atomic, [Record]} ->
+	    {reply, {ok, Record#deltakv.value}, Table}
+    end.
 
 process(Table, {Key, Value}) ->
     F = fun() ->
