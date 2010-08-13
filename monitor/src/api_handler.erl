@@ -27,10 +27,13 @@ get_path(Arg) ->
     {abs_path, Path} = Req#http_request.path,
     Path.
 
-handle_request('GET', "application/xml", ["account"], _Arg) ->
-    make_response(200, "<account><balance>0</balance></account>");
-handle_request('GET', "text/html" ++ _, ["account"], _Arg) ->
-    make_response(200, "<p>Your balance is 0, loser!</p>");
+hostify(Host) ->
+    "<host>" ++ Host ++ "</host>".
+
+handle_request('GET', "application/xml", ["hosts"], _Arg) ->
+    {ok, Hosts} = hosts_server:enum(),
+    Data = "<hosts>" ++ [hostify(Host) || Host <- Hosts] ++ "</hosts>",
+    make_response(200, Data);
 
 handle_request(Cmd, Accept, Request, Arg) -> % catchall
     throw(nomatch).

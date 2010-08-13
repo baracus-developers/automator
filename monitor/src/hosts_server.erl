@@ -4,7 +4,7 @@
 -include_lib("stdlib/include/qlc.hrl").
 -export([run_once/1,
 	 start_link/0, init/1,
-	 create/1, lookup/1,
+	 create/1, lookup/1, enum/0,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
@@ -34,6 +34,12 @@ create(Mac) ->
 
 lookup(Spec) -> %either {mac, Mac}, or {hostname, Hostname}
     gen_server:call(?MODULE, {lookup, Spec}).
+
+enum() ->
+    gen_server:call(?MODULE, enum).
+
+enum_i() ->
+    do(qlc:q([X#host.mac || X <- mnesia:table(hosts)])).
 
 do(Q) ->
     F = fun() -> qlc:e(Q) end,
@@ -88,11 +94,14 @@ handle_call({lookup, {mac, Mac}}, _From, State) ->
     end;
 handle_call({lookup, {hostname, Hostname}}, _From, State) ->
     erlang:error(notyet);
+handle_call(enum, _From, State) ->
+    Hosts = enum_i(),
+    {reply, {ok, Hosts}, State};
 handle_call(Request, From, State) ->
     {stop, {unexpected_call, Request}, State}.
 
 handle_cast(initialize, State=#state{initialized = false}) ->
-    Hosts = do(qlc:q([X#host.mac || X <- mnesia:table(hosts)])),
+    Hosts = enum_i(),
     [create_fsm(Mac) || Mac <- Hosts],
     {noreply, State#state{initialized = true}};
 handle_cast(Request, State) ->
