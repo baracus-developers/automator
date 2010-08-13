@@ -4,11 +4,12 @@ commaspace := ,$(space)
 
 OBJDIR=./obj
 EBINDIR=$(OBJDIR)/monitor/ebin
-SRCS += $(shell find *.erl)
-OBJS = $(patsubst %.erl,$(EBINDIR)/%.beam,$(SRCS))
-WSMODULES = $(patsubst %.erl,%, $(SRCS))
+SRCS += $(shell find src/*.erl)
+OBJS = $(patsubst src/%.erl,$(EBINDIR)/%.beam,$(SRCS))
+WSMODULES = $(patsubst src/%.erl,%, $(SRCS))
 MODULES = $(subst $(space),$(commaspace), $(WSMODULES))
 INCLUDES += -I/usr/lib
+INCLUDES += -I./include
 
 all: application release
 
@@ -22,7 +23,7 @@ $(EBINDIR)/monitor.app: monitor.app Makefile
 
 $(OBJS): $(SRCS) Makefile
 
-$(EBINDIR)/%.beam: %.erl Makefile
+$(EBINDIR)/%.beam: src/%.erl Makefile
 	@touch monitor.app
 	@echo "Compiling (Erlang) $< to $@"
 	@mkdir -p $(EBINDIR)
