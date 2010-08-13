@@ -1,11 +1,14 @@
 -module(hosts_server).
 -behavior(gen_server).
 -include_lib("host_record.hrl").
+-include_lib("stdlib/include/qlc.hrl").
 -export([run_once/1,
 	 start_link/0, init/1,
 	 create/1, lookup/1,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
+
+-record(state, {initialized}).
 
 run_once(Nodes) ->
     {atomic, ok} = mnesia:create_table(hosts,
@@ -20,18 +23,8 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
-    F = fun() ->
-		init_fsm(mnesia:first(hosts))
-	end,
-    {atomic, ok} = mnesia:transaction(F),
-
-    {ok, unused}.
-
-init_fsm('$end_of_table') ->
-    ok;
-init_fsm(Mac) ->
-    {ok, _Id} = create_fsm(Mac),
-    init_fsm(mnesia:next(hosts)).
+    gen_server:cast(?MODULE, initialize), %defer initialization async to the startup
+    {ok, #state{initialized = false}}.
 
 mac2id(Mac) ->
     list_to_atom(string:concat("hostfsm-", Mac)).    
@@ -41,6 +34,11 @@ create(Mac) ->
 
 lookup(Spec) -> %either {mac, Mac}, or {hostname, Hostname}
     gen_server:call(?MODULE, {lookup, Spec}).
+
+do(Q) ->
+    F = fun() -> qlc:e(Q) end,
+    {atomic, Val} = mnesia:transaction(F),
+    Val.
 
 create_fsm(Mac) ->
     Id = mac2id(Mac),
@@ -93,6 +91,10 @@ handle_call({lookup, {hostname, Hostname}}, _From, State) ->
 handle_call(Request, From, State) ->
     {stop, {unexpected_call, Request}, State}.
 
+handle_cast(initialize, State=#state{initialized = false}) ->
+    Hosts = do(qlc:q([X#host.mac || X <- mnesia:table(hosts)])),
+    [create_fsm(Mac) || Mac <- Hosts],
+    {noreply, State#state{initialized = true}};
 handle_cast(Request, State) ->
     {stop, {unexpected_cast, Request}, State}.
 

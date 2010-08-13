@@ -4,18 +4,10 @@
 -export([init/1, discovery/2]).
 -compile(export_all).
 
--record(state, {mac}).
+-record(state, {id, mac}).
 
 init([Id, Mac]) ->
-    {ok, BaracusState} = bahost_mon:get_state(Mac),
-    {ok, Record} = get_record(Mac),
-
-    init(Id, Record, BaracusState).
-
-init(Id, Record, inventory) ->
-    {ok, discovery, #state{mac = Record#host.mac}};
-init(Id, Record, built) ->
-    {ok, running, #state{mac = Record#host.mac}}.
+    {ok, initialize, #state{id = Id, mac = Mac}, 0}.
 
 %------------------------------------------------------------------------
 
@@ -112,6 +104,26 @@ handle_poweroff(Mac) ->
 	end,
     {atomic, ok} = mnesia:transaction(F),
     ok.
+
+initialize(timeout, State) ->
+    Mac = State#state.mac,
+    {ok, BaracusState} = bahost_mon:get_state(Mac),
+    {ok, Record} = get_record(Mac),
+
+    error_logger:info_msg("~p: (Re)starting with Record: ~p BaracusState: ~p~n",
+			  [State#state.id, Record, BaracusState]),
+
+    initialize(Record, BaracusState, State).
+
+initialize(Record=#host{hostname = undefined, personality = undefined, power = undefined}, inventory, State) ->
+    {next_state, discovery, State};
+initialize(Record=#host{power = on}, built, State) ->
+
+    machine_fsm:create(Record#host.hostname),
+    baracus_driver:poweron(Record#host.mac),
+
+    {next_state, running, State}.
+
 
 %------------------------------------------------------
 % DISCOVERY: We enter this state while we wait for
