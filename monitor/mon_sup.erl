@@ -24,6 +24,8 @@ init(Port) ->
             permanent, brutal_kill, worker, [puppetca_mon]},
 	   {puppetca_mon, {puppetca_mon, start_poller_link, []},
             permanent, brutal_kill, worker, [puppetca_mon]},
+	   {host_server, {host_server, start_link, []},
+            permanent, brutal_kill, worker, [host_server]},
 	   {api_server,
 	    {api_server, start_link, [Port]},
 	    permanent, 5000, worker, [api_server]}

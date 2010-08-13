@@ -5,8 +5,8 @@ init(_Args) ->
     {ok, []}.
 
 handle_event({system, discovery, {Mac, _Inventory}}, State) ->
-    host_state:configure_power(Mac, ""),
-    host_state:provision(Mac, default),
+    host_fsm:configure_power(Mac, ""),
+    host_fsm:provision(Mac, default),
     {ok, State};
 handle_event(_, State) ->
     {ok, State}.

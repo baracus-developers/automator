@@ -10,24 +10,29 @@
 		personality
 	       }).
 
-initial_state(State) ->
-    case State of
-	inventory ->
-	    discovery;
-	built ->
-	    running;
-	_ ->
-	    erlang:error({"Code is unprepared to handle initial state", State})
-    end.
-
-init([Id, Record]) ->
-    {ok,
-     initial_state(Record#bahost.state),
+init([Id, Mac]) ->
+    {ok, discovery,
      #state{id = Id,
-	    mac = Record#bahost.mac,
+	    mac = Mac,
 	    personality = #status{oper = none, admin = default}
 	   }
     }.
+
+sync_send_event(Mac, Event) ->
+    {ok, Id} = host_server:lookup({mac, Mac}),
+    gen_fsm:sync_send_event(Id, Event).
+
+configure_power(Mac, Config) ->
+    sync_send_event(Mac, {command, {configure_power, Config}}).
+
+provision(Mac, Personality) ->
+    sync_send_event(Mac, {command, {provision, Personality}}).
+
+poweron(Mac) ->
+    sync_send_event(Mac, {command, poweron}).
+
+poweroff(Mac) ->
+    sync_send_event(Mac, {command, poweroff}).
 
 subst(Old, New, Data) ->
     case Data of
