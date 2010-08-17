@@ -2,6 +2,7 @@
 
 -include_lib("yaws/include/yaws.hrl").
 -include_lib("yaws/include/yaws_api.hrl").
+-include_lib("hostinfo.hrl").
 
 -export([out/1, handle_request/4]).
 
@@ -27,13 +28,20 @@ get_path(Arg) ->
     {abs_path, Path} = Req#http_request.path,
     Path.
 
-hostify(Host) ->
-    "<host>" ++ Host ++ "</host>".
+gen_host(Host) ->
+    {ok, HostInfo} = hosts_server:get_hostinfo(Host),
+    {host,
+     [
+      {mac, [Host]},
+      {state, [atom_to_list(HostInfo#hostinfo.state)]}
+     ]
+    }.
 
 handle_request('GET', "application/xml", ["hosts"], _Arg) ->
     {ok, Hosts} = hosts_server:enum(),
-    Data = "<hosts>" ++ [hostify(Host) || Host <- Hosts] ++ "</hosts>",
-    make_response(200, Data);
+    Doc =  {hosts, [ gen_host(Host) || Host <- Hosts]},
+    Xml = xmerl:export_simple([Doc], xmerl_xml),
+    make_response(200, Xml);
 
 handle_request(Cmd, Accept, Request, Arg) -> % catchall
     throw(nomatch).

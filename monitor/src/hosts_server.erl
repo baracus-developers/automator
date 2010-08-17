@@ -4,7 +4,7 @@
 -include_lib("stdlib/include/qlc.hrl").
 -export([run_once/1,
 	 start_link/0, init/1,
-	 create/1, lookup/1, enum/0,
+	 create/1, lookup/1, get_hostinfo/1, enum/0,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
@@ -34,6 +34,9 @@ create(Mac) ->
 
 lookup(Spec) -> %either {mac, Mac}, or {hostname, Hostname}
     gen_server:call(?MODULE, {lookup, Spec}).
+
+get_hostinfo(Host) ->
+    host_fsm:get_hostinfo(Host).
 
 enum() ->
     gen_server:call(?MODULE, enum).

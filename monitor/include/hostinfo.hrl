@@ -1,0 +1,2 @@
+
+-record(hostinfo, {mac, state}).

@@ -1,6 +1,7 @@
 -module(host_fsm).
 -behavior(gen_fsm).
 -include_lib("host_record.hrl").
+-include_lib("hostinfo.hrl").
 -export([init/1, discovery/2]).
 -compile(export_all).
 
@@ -27,7 +28,18 @@ poweron(Mac) ->
 poweroff(Mac) ->
     sync_send_event(Mac, {command, poweroff}).
 
+get_hostinfo(Mac) ->
+    {ok, Id} = hosts_server:lookup({mac, Mac}),
+    Id ! {get_hostinfo, self()},
+    receive
+	Msg -> Msg
+    end.
+
 %------------------------------------------------------------------------
+
+handle_info({get_hostinfo, From}, StateName, State) ->
+    From ! {ok, #hostinfo{mac = State#state.mac, state = StateName}},
+    {next_state, StateName, State}.
 
 subst(Old, New, Data) ->
     case Data of
