@@ -37,9 +37,10 @@ gen_host(Host) ->
      ]
     }.
 
-handle_request('GET', "application/xml", ["hosts"], _Arg) ->
+handle_request('GET', "application/xml", ["hosts"], Arg) ->
     {ok, Hosts} = hosts_server:enum(),
-    Doc =  {hosts, [ gen_host(Host) || Host <- Hosts]},
+    RequestUrl = yaws_api:format_url(yaws_api:request_url(Arg)),
+    Doc =  {hosts, [ {host, [RequestUrl ++ "/" ++ Host] } || Host <- Hosts]},
     Xml = xmerl:export_simple([Doc], xmerl_xml),
     make_response(200, Xml);
 
