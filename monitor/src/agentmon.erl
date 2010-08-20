@@ -1,6 +1,6 @@
 -module(agentmon).
 -behavior(gen_server).
--export([start_link/0, init/1, handle_call/3, handle_info/2]).
+-export([start_link/0, init/1, find/1, handle_call/3, handle_info/2]).
 
 -record(state, {nodes}).
 -record(node, {ref, hostname, online_since, pid}).
@@ -10,6 +10,9 @@ start_link() ->
 
 init([]) ->
     {ok, #state{nodes = dict:new()}}.
+
+find(Host) ->
+    gen_server:call({global, agentmon}, {find, Host}).
 
 add_node(Pid, Since, State) ->
     Ref = erlang:monitor(process, Pid),
@@ -31,6 +34,13 @@ drop_node(Node, State) ->
 
 handle_call({nodeup, Since}, {From, _}, State) -> 
     {reply, ok, add_node(From, Since, State)};
+handle_call({find, Host}, _, State) ->
+    case dict:find(Host, State#state.nodes) of
+	{ok, Node} ->
+	    {reply, {online, Node#node.online_since}, State};
+	error ->
+	    {reply, offline, State}
+    end;
 handle_call(Request, _, State) ->
     {reply, {badarg, Request}, State}.
 		  

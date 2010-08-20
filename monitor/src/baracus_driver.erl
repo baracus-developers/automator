@@ -35,6 +35,9 @@ powercycle(Mac) ->
     gen_event:notify(host_events, {baracus, powercycle, Mac}),
     void.
 
+powerstatus(Mac) ->
+    on.
+
 get_inventory(Mac) ->
     "<inventory/>".
 

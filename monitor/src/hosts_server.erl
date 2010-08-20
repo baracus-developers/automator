@@ -11,6 +11,7 @@
 -record(state, {initialized}).
 
 run_once(Nodes) ->
+    io:format("Initializing hosts table~n"),
     {atomic, ok} = mnesia:create_table(hosts,
 				       [
 					{record_name, host},

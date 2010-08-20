@@ -30,5 +30,6 @@ run_once() ->
     mnesia:start(),
 
     hosts_server:run_once(Nodes),
+    machines_server:run_once(Nodes),
     baracus_driver:run_once(Nodes),
     puppetca_driver:run_once(Nodes).

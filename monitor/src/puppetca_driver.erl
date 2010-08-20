@@ -1,5 +1,6 @@
 -module(puppetca_driver).
--export([run_once/1, start_link/0, refresh/0, clear/1, sign/1]).
+-include_lib("certentry.hrl").
+-export([run_once/1, start_link/0, refresh/0, clear/1, sign/1, find/1]).
 
 tablename() -> puppetca.
 
@@ -33,5 +34,7 @@ sign(Host) ->
 
     ok.
 
+find(Host) ->
+    delta_keyvalue:find(tablename(), Host).
 
 

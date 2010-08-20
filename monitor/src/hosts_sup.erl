@@ -10,5 +10,7 @@ init(_Args) ->
     {ok, {{one_for_all, 1, 60},
           [
 	   {hosts_server, {hosts_server, start_link, []},
-            permanent, brutal_kill, worker, [hosts_server]}
+            permanent, brutal_kill, worker, [hosts_server]},
+	   {machines_server, {machines_server, start_link, []},
+            permanent, brutal_kill, worker, [machines_server]}
 	  ]}}.

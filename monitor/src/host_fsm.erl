@@ -77,7 +77,7 @@ handle_provision(Personality, State) ->
     Mac = State#state.mac,
     Hostname = compute_hostname(Mac),
 
-    machine_fsm:create(Hostname),
+    machines_server:create(Hostname, Mac),
     baracus_driver:provision(Mac, Hostname, Personality),
 
     F = fun() ->
@@ -127,12 +127,17 @@ initialize(timeout, State) ->
 
     initialize(Record, BaracusState, State).
 
-initialize(Record=#host{hostname = undefined, personality = undefined, power = undefined}, inventory, State) ->
+initialize(Record=#host{hostname = undefined, personality = undefined, power = undefined},
+	   inventory, State) ->
     {next_state, discovery, State};
 initialize(Record=#host{power = on}, built, State) ->
 
-    machine_fsm:create(Record#host.hostname),
-    baracus_driver:poweron(Record#host.mac),
+    Mac = Record#host.mac,
+
+    case baracus_driver:powerstatus(Mac) of
+	on -> void;
+	_ -> baracus_driver:poweron(Mac)
+    end,
 
     {next_state, running, State}.
 
