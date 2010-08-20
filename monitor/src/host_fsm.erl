@@ -50,8 +50,9 @@ subst(Old, New, Data) ->
     end.
 
 compute_hostname(Mac) ->
-    Hostname = string:concat("cloudbuilder-", 
-			     lists:map(fun(X) -> subst($:, $-, X) end, Mac)),
+    Hostname = "cloudbuilder-" ++ 
+	lists:map(fun(X) -> subst($:, $-, X) end, Mac) ++
+	".laurelwood.net", % FIXME
     string:to_lower(Hostname).
 
 get_record(State) when erlang:is_record(State, state) ->
@@ -75,16 +76,17 @@ get_hostname(Mac) ->
 
 handle_provision(Personality, State) ->
     Mac = State#state.mac,
-    Hostname = compute_hostname(Mac),
+    FQDN = compute_hostname(Mac),
+    [Hostname | Domain] = string:tokens(FQDN, "."),
 
-    machines_server:create(Hostname, Mac),
+    machines_server:create(FQDN, Mac),
     baracus_driver:provision(Mac, Hostname, Personality),
 
     F = fun() ->
 		[Record] = mnesia:read(hosts, Mac, write),
 		mnesia:write(hosts,
 			     Record#host{personality = Personality,
-					 hostname = Hostname,
+					 hostname = FQDN,
 					 power = on},
 			     write),
 		updated

@@ -3,7 +3,7 @@
 -export([start/2, stop/1]).
 
 start(_Type, _StartArgs) ->
-    Monitor = 'monitor@baracus', %FIXME
+    Monitor = 'monitor@baracus.laurelwood.net', %FIXME
  
     {ok, F} = file:open("/etc/cloudbuilder-id", [read]),
     Cookie = io:get_line(F, ""),

@@ -17,9 +17,7 @@ refresh() ->
     delta_keyvalue:analyze(tablename(), Data).
 
 cmd(Option, Host) ->
-    Domain = ".laurelwood.net", %FIXME
-    Cmd = io_lib:format("puppetca ~s ~s", [Option,
-					   string:concat(Host, Domain)]),
+    Cmd = io_lib:format("puppetca ~s ~s", [Option, Host]),
     os:cmd(Cmd).    
 
 clear(Host) ->

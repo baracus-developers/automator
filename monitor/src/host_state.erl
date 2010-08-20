@@ -9,13 +9,12 @@ init(_Args) ->
 
 handle_agent(Agent, Event) ->
     ["agent", Host] = string:tokens(atom_to_list(Agent), "@"),
-    Id = list_to_existing_atom(string:to_lower(Host)),
+    {ok, Id} = machines_server:lookup(Host),
     gen_fsm:send_event(Id, Event),
     ok.
 
-join_request(FQDN) ->
-    [Host | Domain] = string:tokens(FQDN, "."),
-    Id = list_to_existing_atom(string:to_lower(Host)),
+join_request(Host) ->
+    {ok, Id} = machines_server:lookup(Host),
     gen_fsm:send_event(Id, {puppetca, join_request}),    
     ok.
 
@@ -26,10 +25,10 @@ handle_event({baracus, update, Mac, Old, New}, State) ->
     {ok, Id} = hosts_server:lookup({mac, Mac}),
     gen_fsm:send_event(Id, {baracus_state_change, New#bahost.state}),
     {ok, State};
-handle_event({puppetca, add, FQDN, #certentry{type = request}}, State) ->
-    try join_request(FQDN)
+handle_event({puppetca, add, Host, #certentry{type = request}}, State) ->
+    try join_request(Host)
     catch
-	_:_ -> error_logger:info_msg("PuppetCA: Ignoring ~s~n", [FQDN])
+	_:_ -> error_logger:info_msg("PuppetCA: Ignoring ~s~n", [Host])
     end,
  		       
     {ok, State};
