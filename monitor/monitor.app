@@ -5,5 +5,5 @@
 {env, [
     {port, 8000}
 ]},
-{applications, [kernel, stdlib, sasl, inets, yaws]},
+{applications, [kernel, stdlib, sasl, inets, ssl, yaws]},
 {mod, {mon_app, []}} ]}.
