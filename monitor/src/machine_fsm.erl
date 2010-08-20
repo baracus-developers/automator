@@ -33,7 +33,20 @@ delete(Host) ->
     {ok, Id} = machines_server:lookup(Host),
     ok = gen_fsm:sync_send_all_state_event(Id, delete).
 
+info(Host) ->
+    {ok, Id} = machines_server:lookup(Host),
+    Id ! {get_info, self()},
+    receive
+	Msg -> Msg
+    after 10000 ->
+	    timeout
+    end.
+
 %-------------------------------------------------------
+
+handle_info({get_info, From}, StateName, State) ->
+    From ! {ok, StateName},
+    {next_state, StateName, State}.
 
 puppet_sign(State) ->
     Host = State#state.hostname,

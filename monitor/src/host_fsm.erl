@@ -33,10 +33,16 @@ get_hostinfo(Mac) ->
     Id ! {get_hostinfo, self()},
     receive
 	Msg -> Msg
+    after 10000 ->
+	    timeout
     end.
 
 %------------------------------------------------------------------------
 
+handle_info({get_hostinfo, From}, running, State) ->
+    {ok, MachineInfo} = machine_fsm:info(get_hostname(State)),
+    From ! {ok, #hostinfo{mac = State#state.mac, state = MachineInfo}},
+    {next_state, running, State};
 handle_info({get_hostinfo, From}, StateName, State) ->
     From ! {ok, #hostinfo{mac = State#state.mac, state = StateName}},
     {next_state, StateName, State}.
