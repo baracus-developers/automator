@@ -50,10 +50,7 @@ handle_request('GET', "application/xml", ["hosts", Host], Arg) ->
 	    Xml = xmerl:export_simple([Doc], xmerl_xml),
 	    make_response(200, Xml)
     catch
-	Except:Error ->
-	    error_logger:error_msg("Caught ~p:~p for ~p~n",
-				   [Except, Error, Arg#arg.req]),
-	    [{status, 404}]
+	error:{badmatch, notfound} -> [{status, 404}]
     end;
 
 handle_request(Cmd, Accept, Request, Arg) -> % catchall
