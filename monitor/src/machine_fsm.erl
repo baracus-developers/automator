@@ -269,5 +269,4 @@ handle_sync_event(delete, StateName, State) ->
 
 terminate(Reason, State) ->
     alarm_handler:clear_alarm(State#state.id).
-
     
