@@ -28,7 +28,7 @@ get_path(Arg) ->
     {abs_path, Path} = Req#http_request.path,
     Path.
 
-gen_host(Host) ->
+get_host(Host) ->
     {ok, HostInfo} = hosts_server:get_hostinfo(Host),
     {host,
      [
@@ -43,6 +43,18 @@ handle_request('GET', "application/xml", ["hosts"], Arg) ->
     Doc =  {hosts, [ {host, [RequestUrl ++ "/" ++ Host] } || Host <- Hosts]},
     Xml = xmerl:export_simple([Doc], xmerl_xml),
     make_response(200, Xml);
+
+handle_request('GET', "application/xml", ["hosts", Host], Arg) ->
+    try get_host(Host) of
+	Doc ->
+	    Xml = xmerl:export_simple([Doc], xmerl_xml),
+	    make_response(200, Xml)
+    catch
+	Except:Error ->
+	    error_logger:error_msg("Caught ~p:~p for ~p~n",
+				   [Except, Error, Arg#arg.req]),
+	    [{status, 404}]
+    end;
 
 handle_request(Cmd, Accept, Request, Arg) -> % catchall
     throw(nomatch).
