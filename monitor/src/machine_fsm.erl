@@ -119,11 +119,11 @@ initialize(joining, on, built, notfound, offline, State) ->
 initialize(joining, on, built,
 	   {ok, CertEntry=#certentry{type = request}}, offline, State) ->
     puppetca_driver:sign(State#state.hostname),
-    {next_state, starting_up, State, initial_startup_timeout()};
+    {next_state, synchronizing, State, initial_startup_timeout()};
 
 initialize(joining, on, built, {ok, CertEntry=#certentry{type = valid}},
 	   offline, State) ->
-    {next_state, starting_up, State, initial_startup_timeout()};
+    {next_state, synchronizing, State, initial_startup_timeout()};
 
 initialize(ready, on, built, {ok, CertEntry=#certentry{type = valid}},
 	   {online, Since}, State) ->
@@ -131,7 +131,7 @@ initialize(ready, on, built, {ok, CertEntry=#certentry{type = valid}},
 
 initialize(ready, on, built, {ok, CertEntry=#certentry{type = valid}},
 	   offline, State) ->
-    {next_state, starting_up, State, initial_startup_timeout()};
+    {next_state, synchronizing, State, initial_startup_timeout()};
 
 initialize(ready, off, built, {ok, CertEntry=#certentry{type = valid}},
 	   _, State) ->
@@ -158,7 +158,7 @@ building_down(poweron, State) ->
 
 puppet_join({puppetca, join_request}, State) ->
     puppet_sign(State),
-    {next_state, starting_up, State, 300000};
+    {next_state, synchronizing, State, 300000};
 puppet_join(poweroff, State) ->
     update_power(State#state.hostname, off),
     {next_state, puppet_down, State};
@@ -172,7 +172,7 @@ puppet_join(timeout, State) ->
 puppet_failed({puppetca, join_request}, State) ->
     alarm_handler:clear_alarm(State#state.id),
     puppet_sign(State),
-    {next_state, starting_up, State, 300000};
+    {next_state, synchronizing, State, 300000};
 puppet_failed(reboot, State) ->
     {next_state, puppet_failed, State};
 puppet_failed(powerdown, State) ->
@@ -194,14 +194,14 @@ puppet_failed_down({puppetca, join_request}, State) ->
     puppet_sign(State),
     {next_state, down, State}.
 
-starting_up(reboot, State) ->
-    {next_state, starting_up, State, std_timeout()};
-starting_up({agent, online, _Since}, State) ->
+synchronizing(reboot, State) ->
+    {next_state, synchronizing, State, std_timeout()};
+synchronizing({agent, online, _Since}, State) ->
     {next_state, online, State};
-starting_up(poweroff, State) ->
+synchronizing(poweroff, State) ->
     update_power(State#state.hostname, off),
     {next_state, down, State};
-starting_up(timeout, State) ->
+synchronizing(timeout, State) ->
     alarm_handler:set_alarm({State#state.id,
 			     "Timeout waiting for startup"}),
     {next_state, offline, State}.
@@ -220,7 +220,7 @@ offline({agent, online, _Since}, State) ->
     {next_state, online, State};
 offline(reboot, State) ->
     alarm_handler:clear_alarm(State#state.id),
-    {next_state, starting_up, State, std_timeout()};
+    {next_state, synchronizing, State, std_timeout()};
 offline(poweroff, State) ->
     alarm_handler:clear_alarm(State#state.id),
     update_power(State#state.hostname, off),
@@ -248,7 +248,7 @@ reboot(poweroff, State) ->
     update_power(State#state.hostname, off),
     {next_state, shutting_down, State, std_timeout()};
 reboot({agent, offline}, State) ->
-    {next_state, starting_up, State, std_timeout()};
+    {next_state, synchronizing, State, std_timeout()};
 reboot(reboot, State) ->
     {next_state, reboot, State, std_timeout()};
 reboot(timeout, State) ->
@@ -265,11 +265,11 @@ reboot_failed(reboot, State) ->
     {next_state, reboot, State, std_timeout()};
 reboot_failed({agent, offline}, State) ->
     alarm_handler:clear_alarm(State#state.id),
-    {next_state, starting_up, State, std_timeout()}.
+    {next_state, synchronizing, State, std_timeout()}.
 
 down(poweron, State) ->
     update_power(State#state.hostname, on),
-    {next_state, starting_up, State, std_timeout()}.
+    {next_state, synchronizing, State, std_timeout()}.
 
 handle_sync_event(delete, StateName, State) ->
     puppetca_driver:clear(State#state.hostname),
