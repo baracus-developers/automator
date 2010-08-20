@@ -174,7 +174,7 @@ case "$1" in
 	echo -n "Starting AGENT "
 	## Start daemon with startproc(8). If this fails
 	## the return value is set appropriately by startproc.
-	(cd /usr/sbin; tar -zxvf agent.tgz)
+	(cd /usr/sbin; tar -zxf agent.tgz)
 	mkdir -p $LOGDIR
 	run_erl -daemon /tmp $LOGDIR  "erl -boot /usr/sbin/agent -noshell -heart -pa /usr/sbin/agent/ebin -name agent -kernel net_ticktime 5 -proto_dist inet_ssl -ssl_dist_opt cacertfile /var/lib/puppet/ssl/certs/ca.pem -ssl_dist_opt server_certfile /var/lib/puppet/ssl/certs/$(hostname --long).pem -ssl_dist_opt server_keyfile /var/lib/puppet/ssl/private_keys/$(hostname --long).pem -ssl_dist_opt verify verify_peer depth 1"
 	
