@@ -39,7 +39,8 @@ powerstatus(Mac) ->
     on.
 
 get_inventory(Mac) ->
-    "<inventory/>".
+    Cmd = io_lib:format("bahost detail inventory --mac ~s", [Mac]),
+    os:cmd(Cmd).
 
 refresh() ->
     RawData = os:cmd("bahost list states"),
