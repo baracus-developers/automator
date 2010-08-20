@@ -96,7 +96,7 @@ handle_provision(Personality, State) ->
 
 handle_reprovision(Personality, State) ->
     Hostname = get_hostname(State),
-    machine_fsm:terminate(Hostname),
+    machine_fsm:delete(Hostname),
     handle_provision(Personality, State).
 
 illegal_command(Command, StateName, State) ->
@@ -198,7 +198,7 @@ building({command, poweroff}, _From, State) ->
     Mac = State#state.mac,
     Hostname = get_hostname(Mac),
 
-    machine_fsm:terminate(Hostname),
+    machine_fsm:delete(Hostname),
     handle_poweroff(Mac),
 
     {reply, ok, dark, State};

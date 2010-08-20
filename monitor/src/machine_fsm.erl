@@ -2,7 +2,7 @@
 -behavior(gen_fsm).
 -include_lib("machine_record.hrl").
 -include_lib("certentry.hrl").
--export([init/1, built/1, poweron/1, poweroff/1, reboot/1, terminate/1]).
+-export([init/1, built/1, poweron/1, poweroff/1, reboot/1, delete/1]).
 -compile(export_all).
 
 -record(status, {oper, admin}).
@@ -29,9 +29,9 @@ poweroff(Host) ->
 reboot(Host) ->
     send_event(Host, reboot).
 
-terminate(Host) ->
+delete(Host) ->
     {ok, Id} = machines_server:lookup(Host),
-    ok = gen_fsm:sync_send_all_state_event(Id, terminate).
+    ok = gen_fsm:sync_send_all_state_event(Id, delete).
 
 %-------------------------------------------------------
 
@@ -258,15 +258,16 @@ down(poweron, State) ->
     update_power(State#state.hostname, on),
     {next_state, starting_up, State, std_timeout()}.
 
-handle_sync_event(terminate, StateName, State) ->
-    {stop, terminated, ok, State}.
-
-terminate(Reason, State) ->
+handle_sync_event(delete, StateName, State) ->
     puppetca_driver:clear(State#state.hostname),
-    alarm_handler:clear_alarm(State#state.id),
     F = fun() ->
 		mnesia:delete(machines, State#state.hostname, write),
 		ok
 	end,
-    {atomic, ok} = mnesia:transaction(F).
+    {atomic, ok} = mnesia:transaction(F),
+    {stop, terminated, ok, State}.
+
+terminate(Reason, State) ->
+    alarm_handler:clear_alarm(State#state.id).
+
     
