@@ -2,8 +2,8 @@
 -include_lib("bahost_record.hrl").
 -export([process/1]).
 
-divider() -> "------------------------------------------------------------".
-header() ->  "mac                pxecurr    pxenext    state     active   ".
+divider() -> "-----------------------------------------------------------------------------".
+header() ->  "mac               hostname          pxecurr    pxenext    state     active   ".
 
 process(RawData) ->
     try
@@ -51,7 +51,7 @@ parseheader(Tokens) ->
 validmac() -> "([0-9A-F][0-9A-F]:){5}[0-9A-F][0-9A-F]".
 
 parseline(Line) ->
-    [Mac, PxeCurr, PxeNext, State, Active] = string:tokens(Line, " "),
+    [Mac, Hostname, PxeCurr, PxeNext, State, Active] = string:tokens(Line, " "),
     case re:run(Mac, validmac(), [{capture, first, list}]) of
 	{match, [CapturedMac]} ->
 	    if
