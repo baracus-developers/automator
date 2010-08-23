@@ -3,7 +3,12 @@
 -export([start/2, stop/1, run_once/0]).
 
 start(_Type, _StartArgs) ->
-    {ok, F} = file:open("/etc/cloudbuilder-id", [read]),
+    F = case file:open("/etc/cloudbuilder-id", [read]) of
+	    {ok, File} -> File;
+	    Error -> 
+		error_logger:error_msg("Error opening /etc/cloudbuilder-id: ~p~n", [Error]),
+		throw(Error)
+	end,
     Cookie = io:get_line(F, ""),
     file:close(F),
     
