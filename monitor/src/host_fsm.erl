@@ -56,9 +56,10 @@ subst(Old, New, Data) ->
     end.
 
 compute_hostname(Mac) ->
+    {ok, Domain} = config:get_domain(),
     Hostname = "cloudbuilder-" ++ 
 	lists:map(fun(X) -> subst($:, $-, X) end, Mac) ++
-	".laurelwood.net", % FIXME
+	"." ++ Domain,
     string:to_lower(Hostname).
 
 get_record(State) when erlang:is_record(State, state) ->

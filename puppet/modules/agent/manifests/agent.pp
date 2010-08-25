@@ -12,11 +12,11 @@ class agent {
 		require => File["/usr/sbin/agent.tgz"]
 	}
 
-	file { "/etc/cloudbuilder-id":
-		content => template("agent/cloudbuilder-id.erb"),
+	file { "/etc/cloudbuilder.conf":
+		content => template("agent/cloudbuilder.conf.erb"),
 		mode => 700
 	}
 
-	service { "agent": ensure => running, require => File["/etc/init.d/agent", "/etc/cloudbuilder-id"] }
+	service { "agent": ensure => running, require => File["/etc/init.d/agent", "/etc/cloudbuilder.conf"] }
 }
 

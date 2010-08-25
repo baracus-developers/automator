@@ -3,16 +3,6 @@
 -export([start/2, stop/1, run_once/0]).
 
 start(_Type, _StartArgs) ->
-    F = case file:open("/etc/cloudbuilder-id", [read]) of
-	    {ok, File} -> File;
-	    Error -> 
-		error_logger:error_msg("Error opening /etc/cloudbuilder-id: ~p~n", [Error]),
-		throw(Error)
-	end,
-    Cookie = io:get_line(F, ""),
-    file:close(F),
-    
-    erlang:set_cookie(node(), list_to_atom(Cookie)),
 
     %{ok, Port} = application:get_env(?MODULE, port),
     Port = 8000,
