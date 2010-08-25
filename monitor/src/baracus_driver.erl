@@ -19,9 +19,8 @@ configure_power(Mac, Config) ->
     void.
 
 provision(Mac, Hostname, default) ->
-    Cmd = io_lib:format("bado build --mac ~s --profile sumatra --ip dhcp --hostname ~s --module=puppet", [Mac, Hostname]),
     gen_event:notify(host_events, {policy, provision, Mac, Hostname}),
-    os:cmd(Cmd).
+    util:os_cmd_format("bado build --mac ~s --profile sumatra --ip dhcp --hostname ~s --module puppet", [Mac, Hostname]).
 
 poweron(Mac) ->
     gen_event:notify(host_events, {baracus, poweron, Mac}),
@@ -39,11 +38,10 @@ powerstatus(Mac) ->
     on.
 
 get_inventory(Mac) ->
-    Cmd = io_lib:format("bahost detail inventory --mac ~s", [Mac]),
-    os:cmd(Cmd).
+    util:os_cmd_format("bahost detail inventory --mac ~s", [Mac]).
 
 refresh() ->
-    RawData = os:cmd("bahost list states"),
+    RawData = util:os_cmd("bahost list states"),
     Data = bahost_parser:process(RawData),
     delta_keyvalue:analyze(tablename(), Data).
 
