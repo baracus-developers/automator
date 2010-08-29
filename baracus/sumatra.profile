@@ -21,7 +21,7 @@ hardware=default
 distro=opensuse-11.2-x86_64
 
 #autobuild
-autobuild=opensuse-11.2-x86_64
+autobuild=sumatra
 
 # LOCALIZATION
 #
