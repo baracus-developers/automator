@@ -108,7 +108,7 @@ initialize(building, off, _, _, _, State) ->
 
 initialize(building, on, BaracusState, notfound, offline, State) when 
   BaracusState =/= built ->
-    {next_state, building, State};
+    {next_state, building, State, 1200000};
 
 initialize(joining, off, built, notfound, offline, State) ->
     {next_state, puppet_down, State};
@@ -150,6 +150,22 @@ building(poweroff, State) ->
 building(reboot, State) ->
     {next_state, building, State};
 building(built, State) ->
+    update_state(State#state.hostname, joining),
+    {next_state, puppet_join, State, puppet_timeout()};
+building(timeout, State) ->
+    alarm_handler:set_alarm({State#state.id,
+			     "Timeout waiting for build completion"}), 
+    {next_state, building_failed, State}.
+
+building_failed(poweroff, State) ->
+    alarm_handler:clear_alarm(State#state.id),
+    update_power(State#state.hostname, off),
+    {next_state, building_down, State};
+building_failed(reboot, State) ->
+    alarm_handler:clear_alarm(State#state.id),
+    {next_state, building, State};
+building_failed(built, State) ->
+    alarm_handler:clear_alarm(State#state.id),
     update_state(State#state.hostname, joining),
     {next_state, puppet_join, State, puppet_timeout()}.
 
