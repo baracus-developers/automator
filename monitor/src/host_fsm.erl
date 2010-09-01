@@ -139,7 +139,8 @@ initialize(timeout, State) ->
 initialize(Record=#host{hostname = undefined, personality = undefined, power = undefined},
 	   inventory, State) ->
     {next_state, discovery, State};
-initialize(Record=#host{power = on}, built, State) ->
+initialize(Record=#host{power = on}, BaracusState, State)
+  when BaracusState =:= built; BaracusState =:= localboot ->
 
     Mac = Record#host.mac,
 
@@ -245,6 +246,10 @@ running({command, poweroff}, _From, State) ->
     {reply, ok, sleep, State};
 running({command, Command}, _From, State) ->
     illegal_command(Command, running, State).
+
+running({baracus_state_change, localboot}, State) ->
+    {next_state, running, State}.
+
 
 %------------------------------------------------------
 % SLEEP: Node is powered down and can only be awoken

@@ -125,16 +125,19 @@ initialize(joining, on, built, {ok, CertEntry=#certentry{type = valid}},
 	   offline, State) ->
     {next_state, synchronizing, State, initial_startup_timeout()};
 
-initialize(ready, on, built, {ok, CertEntry=#certentry{type = valid}},
-	   {online, Since}, State) ->
+initialize(ready, on, BaracusState, {ok, CertEntry=#certentry{type = valid}},
+	   {online, Since}, State)
+  when BaracusState =:= built; BaracusState =:= localboot ->
     {next_state, online, State};
 
-initialize(ready, on, built, {ok, CertEntry=#certentry{type = valid}},
-	   offline, State) ->
+initialize(ready, on, BaracusState, {ok, CertEntry=#certentry{type = valid}},
+	   offline, State)
+  when BaracusState =:= built; BaracusState =:= localboot ->
     {next_state, synchronizing, State, initial_startup_timeout()};
 
-initialize(ready, off, built, {ok, CertEntry=#certentry{type = valid}},
-	   _, State) ->
+initialize(ready, off, BaracusState, {ok, CertEntry=#certentry{type = valid}},
+	   _, State) 
+  when BaracusState =:= built; BaracusState =:= localboot ->
     {next_state, down, State}.
 
 % ...and hopefully, all other combos are invalid states
