@@ -32,7 +32,7 @@ get_hostinfo(Mac) ->
     {ok, Id} = hosts_server:lookup({mac, Mac}),
     Id ! {get_hostinfo, self()},
     receive
-	Msg -> Msg
+	{hostinfo, Msg} -> Msg
     after 10000 ->
 	    timeout
     end.
@@ -41,10 +41,10 @@ get_hostinfo(Mac) ->
 
 handle_info({get_hostinfo, From}, running, State) ->
     {ok, MachineInfo} = machine_fsm:info(get_hostname(State)),
-    From ! {ok, #hostinfo{mac = State#state.mac, state = MachineInfo}},
+    From ! {hostinfo, {ok, #hostinfo{mac = State#state.mac, state = MachineInfo}}},
     {next_state, running, State};
 handle_info({get_hostinfo, From}, StateName, State) ->
-    From ! {ok, #hostinfo{mac = State#state.mac, state = StateName}},
+    From ! {hostinfo, {ok, #hostinfo{mac = State#state.mac, state = StateName}}},
     {next_state, StateName, State}.
 
 subst(Old, New, Data) ->
