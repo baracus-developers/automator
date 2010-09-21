@@ -5,5 +5,6 @@
 {env, [
     {port, 8000}
 ]},
-{applications, [kernel, stdlib, sasl, inets, ssl, yaws]},
+{applications, [kernel, stdlib, sasl, inets, ssl, yaws, crypto, eopenid,
+		nprocreg, simple_bridge, nitrogen]},
 {mod, {mon_app, []}} ]}.

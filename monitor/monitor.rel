@@ -8,5 +8,11 @@
   {inets, "5.3"},
   {ssl, "3.10.8"},
   {yaws, "1.88"},
+  {crypto, "1.6.4"},
+  {eopenid, "0.1.0"},
+  {yaws_security, "0.1.1"},
+  {nprocreg, "0.1"},
+  {simple_bridge, "1.0"},
+  {nitrogen, "2.0.1"},
   {monitor, "0.1.0"}
 ]}.

@@ -28,7 +28,10 @@ init(Port) ->
             permanent, brutal_kill, worker, [puppetca_mon]},
 	   {hosts_sup, {hosts_sup, start_link, []},
             permanent, brutal_kill, supervisor, [hosts_sup]},
-	   {api_server,
-	    {api_server, start_link, [Port]},
-	    permanent, 5000, worker, [api_server]}
+%	   {api_server,
+%	    {api_server, start_link, [Port]},
+%	    permanent, 5000, worker, [api_server]},
+	   {webapp_server,
+	    {webapp_server, start_link, [Port]},
+	    permanent, 5000, worker, [webapp_server]}
 	  ]}}.
