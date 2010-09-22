@@ -22,7 +22,8 @@ init([Port]) ->
 
     ok = yaws_security:register_filterchain(
 	   mychain,
-	   [ {chain, http_session}, 
+	   [ {function, fun(Arg, Ctx) -> forbidden_filter(Arg, Ctx) end},
+	     {chain, http_session}, 
 	     {chain, myopenid}
 	   ],
 	   []),
@@ -49,6 +50,12 @@ init([Port]) ->
     end,
 
     {ok, null}.
+
+forbidden_filter(Arg, Ctx) ->
+    try yaws_security_filterchain:next(Arg, Ctx)
+    catch
+	throw:forbidden -> {redirect_local, "/forbidden"}
+    end.
 
 % this function is invoked by the yaws-security framework after a user has successfully
 % authenticated with their respective identity provider.  We want to now ensure that
@@ -88,6 +95,7 @@ handler(Arg, Ctx) ->
     % assume all others require at least role_user
     case HeadPath of
 	"login" -> ok;
+	"forbidden" -> ok;
 	"nitrogen" -> ok;
 	"css" -> ok;
 	"images" -> ok;
