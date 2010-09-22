@@ -3,14 +3,39 @@
 -compile(export_all).
 -include_lib("nitrogen/include/wf.hrl").
 -include_lib("hostinfo.hrl").
+-include_lib("wf_elements.hrl").
 
 main() -> #template { file="./monitor/site/templates/bare.html" }.
 
 title() -> "Welcome to Cloud-Builder".
 
+toolbar() ->
+    [ {"/images/Back.png", "/images/Back-bw.png", "Back"},
+      {"/images/Next.png", "/images/Next-bw.png", "Next"},
+      {"/images/Add.png", "/images/Add-bw.png", "Add"},
+      {"/images/Bar-Chart.png", "/images/Bar-Chart-bw.png", "Bar-Chart"},
+      {"/images/Comment.png", "/images/Comment-bw.png", "Comment"},
+      {"/images/Email.png", "/images/Email-bw.png", "Email"},
+      {"/images/Info.png", "/images/Info-bw.png", "Info"},
+      {"/images/Line-Chart.png", "/images/Line-Chart-bw.png", "Line-Chart"},
+      {"/images/Load.png", "/images/Load-bw.png", "Load"},
+      {"/images/Modify.png", "/images/Modify-bw.png", "Modify"},
+      {"/images/Pie-Chart.png", "/images/Pie-Chart-bw.png", "Pie-Chart"},
+      {"/images/Print.png", "/images/Print-bw.png", "Print"},
+      {"/images/Profile.png", "/images/Profile-bw.png", "Profile"},
+      {"/images/Save.png", "/images/Save-bw.png", "Save"},
+      {"/images/Search.png", "/images/Search-bw.png", "Search"},
+      {"/images/Warning.png", "/images/Warning-bw.png", "Warning"}
+    ].
+
 body() ->
     [
-     #panel{ class="titlebar", body=#image{ image="/images/cloudbuilder-logo.png"}},
+     #panel{ class="titlebar",
+	     body=[
+		   #panel{body=#image{ image="/images/cloudbuilder-logo.png"}},
+		   #panel{body=#gbar{tabs=toolbar(), postback=selected}}
+		  ]
+	   },
      #container_12 { body=[
 			   #grid_8 { alpha=true, prefix=2, suffix=2, omega=true, body=inner_body() }
 			  ]}
@@ -85,6 +110,8 @@ async_loop() ->
     end,
     async_loop().
 
+event({selected, Label}) ->
+    io:format("Selected: ~p~n", [Label]);
 event(_) -> ok.
 
 reverse_class(Acc) ->

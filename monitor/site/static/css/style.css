@@ -10,39 +10,6 @@ body {
     background-color: #eee;
 }
 
-.titlebar {
-    background-color: #888;
-    border: solid 5px #ddd;
-}
-
-.table {
-    border: solid 2px #aaa;
-    border-collapse: separate;
-    border-spacing: 1px;
-}
-
-.tableheader {
-    background-color: #9ECAE5;
-    color: #fff;
-}
-
-.tablecell {
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.oddrow {
-    background-color: #fff;
-}
-
-.evenrow {
-    background-color: #ddd;
-}
-
-.container_12 {
-    margin-top: 40px;
-}
-
 h1 {
     font-family: Arial, sans-serif;
     font-weight: bold;
@@ -72,11 +39,8 @@ h3 {
 
 p {
     font-size: 1em;
-    line-height: 2em;
-    margin-top: 2em;
-    margin-bottom: 2em;
+    line-height: 1.3em;
 }
-
 
 a, a:visited { 
     color: #4488FF
@@ -85,4 +49,54 @@ a, a:visited {
 
 a:hover, a:active { 
     text-decoration: underline; 
+}
+
+.titlebar {
+    background-color: #888;
+    border: solid 5px #ddd;
+}
+
+.table {
+    border: solid 2px #aaa;
+    border-collapse: separate;
+    border-spacing: 1px;
+}
+
+.gbar {
+    border: 0px;
+    border-collapse: collapse;
+}
+
+.tableheader {
+    background-color: #9ECAE5;
+    color: #fff;
+}
+
+.tablecell {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.gcell {
+    text-align: center;
+}
+
+.oddrow {
+    background-color: #fff;
+}
+
+.evenrow {
+    background-color: #ddd;
+}
+
+.container_12 {
+    margin-top: 40px;
+}
+
+.selected_gtabtext {
+    background-color: #9ECAE5;
+    color: #fff;
+    line-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
 }
