@@ -72,29 +72,18 @@ subst(X) ->
 row(Id) ->
     "row" ++ [subst(X) || X <- Id].
 
--record(state, {pid}).
-
 async_init() ->
-    gen_event:add_sup_handler(host_events, ?MODULE, [self()]),
+    comet_event_server:start_link(),
     async_loop().
-
-init([Pid]) ->
-    {ok, #state{pid=Pid}}.
 
 async_loop() ->
     receive
 	'INIT' -> ok;
-	update ->
+	{relay, Event} ->
 	    wf:update(table, render_table(get_data())),
 	    wf:flush()
     end,
     async_loop().
-
-handle_event(_, State) ->
-    Pid = State#state.pid,
-    Pid ! update,
-
-    {ok, State}.
 
 event(_) -> ok.
 
