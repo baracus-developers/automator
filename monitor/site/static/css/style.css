@@ -5,8 +5,8 @@ html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abb
 
 body { 
     font-family: "Lucida Grande", "Segoe UI", Tahoma, Helvetica, Arial, sans-serif; 
-    font-size: 12px;
-    line-height: 25px;
+    font-size: 16px;
+    line-height: 30px;
     background-color: #eee;
 }
 
@@ -56,6 +56,16 @@ a:hover, a:active {
     border: solid 5px #ddd;
 }
 
+.salutation {
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin-right: 1em;
+    vertical-align: top;
+    text-align: right;
+    color: #daebf5;
+}
+
 .table {
     border: solid 2px #aaa;
     border-collapse: separate;
@@ -100,3 +110,10 @@ a:hover, a:active {
     margin-top: 0;
     margin-bottom: 0;
 }
+
+.login-lightbox {
+    background-color: #eee;
+    border: solid 5px gray;
+}
+
+

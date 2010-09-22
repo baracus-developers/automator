@@ -3,6 +3,7 @@
 
 -include_lib("yaws/include/yaws.hrl").
 -include_lib("yaws/include/yaws_api.hrl").
+-include_lib("yaws_security/include/yaws_security.hrl").
 
 -export([
     start_link/1, init/1,
@@ -31,6 +32,8 @@ init([Port]) ->
 				       fun(Arg, Ctx) -> handler(Arg, Ctx) end},
 				      []),
 
+    ok = yaws_security:register_userdetails(fun(Token) -> userdetails(Token) end),
+
     GC = yaws_config:make_default_gconf(false, "webapp"),
     SC = #sconf{
       port = 8001,
@@ -46,7 +49,24 @@ init([Port]) ->
     end,
 
     {ok, null}.
- 
+
+% this function is invoked by the yaws-security framework after a user has successfully
+% authenticated with their respective identity provider.  We want to now ensure that
+% the user is valid to our application 
+userdetails(Token) ->
+    Principal = Token#token.principal,
+    {ok, {openid, Admin}} = config:get_admin(),
+
+    io:format("Principal: ~s Admin: ~s~n", [Principal, Admin]),
+    if
+	Admin =:= Principal ->
+	    OrigGA = Token#token.granted_authorities,
+	    NewGA = sets:union(OrigGA, sets:from_list([role_user, role_admin])),
+	    {ok, Token#token{principal="Admin", granted_authorities = NewGA}};
+	true ->
+	    {ok, Token#token{granted_authorities=sets:new()}}
+    end.
+
 handler(Arg, Ctx) ->
     Req = Arg#arg.req,
     {abs_path, Path} = Req#http_request.path,
@@ -56,16 +76,24 @@ handler(Arg, Ctx) ->
     nitrogen:init_request(RequestBridge, ResponseBridge),
 
     % install nitrogen handlers for yaws-security
-%    nitrogen:handler(ys_security_handler, Ctx),
-%    nitrogen:handler(ys_role_handler, Ctx),
-%    nitrogen:handler(ys_identity_handler, Ctx),
+    nitrogen:handler(ys_security_handler, Ctx),
+    nitrogen:handler(ys_role_handler, Ctx),
+    nitrogen:handler(ys_identity_handler, Ctx),
+
+    HeadPath = case string:tokens(Path, "/") of
+	[] -> "root";
+	[H | T] -> H
+    end,
 
     % handle default role checking - list unprotected pages explicitly,
     % assume all others require at least role_user
-%    case Path of
-%	"/login" -> ok;
-%	_ -> yaws_security_context:caller_in_role(Ctx, role_user)
-%    end,
+    case HeadPath of
+	"login" -> ok;
+	"nitrogen" -> ok;
+	"css" -> ok;
+	"images" -> ok;
+	_ -> yaws_security_context:caller_in_role(Ctx, role_user)
+    end,
 
     nitrogen:run().
 

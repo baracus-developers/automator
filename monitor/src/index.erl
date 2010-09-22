@@ -16,8 +16,17 @@ body() ->
     [
      #panel{ class="titlebar",
 	     body=[
-		   #panel{body=#image{ image="/images/cloudbuilder-logo.png"}},
-		   #panel{body=#gbar{tabs=toolbar(), postback=selected}}
+		   #panel{class="logo",
+			  body=#image{ image="/images/cloudbuilder-logo.png"}
+			 },
+		   #panel{class="salutation",
+			  body=[
+				"Welcome, " ++ wf:user() ++ " ",
+				#link{ body="Logout", postback=logout}
+			       ]
+			 },
+		   #panel{class="toolbar",
+			  body=#gbar{tabs=toolbar(), postback=selected}}
 		  ]
 	   },
      #container_12 { body=[
@@ -96,6 +105,9 @@ async_loop() ->
 
 event({selected, Label}) ->
     io:format("Selected: ~p~n", [Label]);
+event(logout) ->
+    wf:logout(),
+    wf:redirect("/");
 event(_) -> ok.
 
 reverse_class(Acc) ->
