@@ -57,7 +57,6 @@ userdetails(Token) ->
     Principal = Token#token.principal,
     {ok, {openid, Admin}} = config:get_admin(),
 
-    io:format("Principal: ~s Admin: ~s~n", [Principal, Admin]),
     if
 	Admin =:= Principal ->
 	    OrigGA = Token#token.granted_authorities,
