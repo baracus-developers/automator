@@ -9,10 +9,15 @@ title() -> "CloudBuilder: Authentication Required".
 layout() ->
     [
      #image { class="login-logo", image="/images/cloudbuilder-logo.png"},
-     #h3 { class="login-msg", text="Authentication Required" },
-     #image { class="openid-logo", image="http://openid.net/images/login-bg.gif"},
-     #textbox {class="login-input", id=claimed_id},
-     #button { class="login-button", id=button, text="Login", postback=click}
+     #panel { body=[
+		    #image { class="openid-logo",
+			     image="http://openid.net/images/login-bg.gif"},
+		    #textbox {class="login-input",
+			      id=claimed_id},
+		    #button { class="login-button",
+			      id=button, text="Login", postback=click}
+		   ]
+	    }
     ].
 
 body() ->

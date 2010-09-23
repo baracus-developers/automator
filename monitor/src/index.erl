@@ -7,10 +7,12 @@
 
 main() -> #template { file="./monitor/site/templates/bare.html" }.
 
-title() -> "Welcome to Cloud-Builder".
+title() -> "Novell Cloud-Builder".
 
 toolbar() ->
-    [ {"/images/Search.png", "/images/Search-bw.png", "Monitor"} ].
+    [ {"/images/Search.png", "/images/Search-bw.png", "Monitor"},
+      {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
+    ].
 
 body() ->
     [
@@ -22,7 +24,7 @@ body() ->
 		   #panel{class="salutation",
 			  body=[
 				"Welcome, " ++ wf:user() ++ " ",
-				#link{ body="Logout", postback=logout}
+				#link{ body="Log Out", postback=logout}
 			       ]
 			 },
 		   #panel{class="toolbar",
