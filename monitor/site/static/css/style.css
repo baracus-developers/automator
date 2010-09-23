@@ -55,6 +55,10 @@ a:hover, a:active {
     background-color: #54585b;
 }
 
+.mainpanel {
+    margin: 1em;
+}
+
 .salutation {
     position: fixed;
     top: 0;

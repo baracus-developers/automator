@@ -5,3 +5,7 @@
 	       postback, delegate}).
 -record(gbar, {?ELEMENT_BASE(element_gbar),
 	       tabs, default, postback, delegate}).
+
+% main panels
+-record(pools, {?ELEMENT_BASE(element_pools)}).
+-record(users, {?ELEMENT_BASE(element_users)}).
