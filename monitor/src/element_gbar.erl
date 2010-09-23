@@ -17,7 +17,7 @@ render_cell(State, Key, Default) ->
 		Key -> selected;
 		_ -> unselected
 	    end,
-    #tablecell{id=Key, class=gcell, body=render_tab(State, Key, TabState)}.
+    #panel{id=Key, class=gcell, body=render_tab(State, Key, TabState)}.
 
 process_tab(State, [{Sel, Unsel, Text} | T ]) ->
     Tab = #gtab{selected_image=Sel,
@@ -39,7 +39,7 @@ render_element(R) ->
     wf:state(state, State),
 
     Cells = [render_cell(State, Text, Default) || {_, _, Text} <- R#gbar.tabs ],
-    Panel = #panel{body=#singlerow{class=gbar, cells=Cells}},
+    Panel = #panel{class=gbar, body=Cells},
     element_panel:render_element(Panel).
 
 event({selected, Selected}) ->
@@ -50,7 +50,7 @@ event({selected, Selected}) ->
 event({selected, Current, Next, State}) when Current =:= Next ->
     ok;
 event({selected, Current, Next, State}) ->
-    wf:update(Current, render_cell(State, Current, unselected)),
+    wf:update(Current, render_tab(State, Current, unselected)),
 
     wf:state(state, State#state{currenttab=Next}),
     R = State#state.record,

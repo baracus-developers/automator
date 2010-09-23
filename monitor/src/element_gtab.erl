@@ -1,53 +1,100 @@
 -module(element_gtab).
--compile(export_all).
+-export([reflect/0, render_element/1, event/1]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("wf_elements.hrl").
 
+-record(controls, {mainpanel=wf:temp_id(),
+		   uimg=wf:temp_id(),
+		   img=wf:temp_id(),
+		   text=wf:temp_id()}).
+-record(state, {selected}).
+
 reflect() -> record_info(fields, gtab).
 
-postback(Event, Id, R) ->
-    #event{type=Event, postback={Event, Id, R}, delegate=?MODULE}.
-	
-render_body(Id, R, State) ->
+postback(Event, Controls, R) ->
+    #event{type=Event, postback={Event, Controls, R}, delegate=?MODULE}.
+
+effect_speed() -> 500.
+    
+select(Controls) ->
+    wf:wire(Controls#controls.mainpanel,
+	    #add_class{class="gtab_selected", speed=effect_speed()}),
+    wf:wire(Controls#controls.text,
+	    #add_class{class="gtabtext_selected", speed=effect_speed()}).
+ 	
+render_body(R) ->
  
-    wf:wire(Id, postback(mouseover, Id, R)),
-    wf:wire(Id, postback(mouseout, Id, R)),
-    wf:wire(Id, postback(click, Id, R)),
+    Controls = #controls{},
 
-    #panel{id=Id, body=render_body(R, State)}.
-
-render_body(R, State) ->
-    {Image, Class} = case {R#gtab.state, State} of
-	{unselected, unselected} ->
-			     {R#gtab.unselected_image, gtabtext};
-	{unselected, selected} ->
-			     {R#gtab.selected_image, gtabtext};
-	{selected, _} ->
-			     {R#gtab.selected_image, selected_gtabtext}
+    State = case R#gtab.state of
+		selected ->
+		    select(Controls),
+		    #state{selected = true};
+		unselected ->
+		    wf:wire(Controls#controls.img, #hide{}),
+		    #state{selected = false}
     end,
 
-    [
-     #panel{body=#image{image=Image}},
-     #panel{body=#span{class=Class, text=R#gtab.text}} 
-    ].
+    MainId = Controls#controls.mainpanel,
+
+    % disable mouseover for now
+    %wf:wire(MainId, postback(mouseover, Controls, R)),
+    %wf:wire(MainId, postback(mouseout, Controls, R)),
+    wf:wire(MainId, postback(click, Controls, R)),
+
+    wf:wire(Controls#controls.img,
+	    #add_class{class="gtabimage_selected"}),
+
+    wf:state(MainId, State),
+
+    #panel{id=MainId,
+	   body=[
+		 #panel{id=Controls#controls.uimg,
+                        class="gtabimage",
+			body=#image{image=R#gtab.unselected_image}},
+		 #panel{id=Controls#controls.img,
+			class="gtabimage",
+			body=#image{image=R#gtab.selected_image}},
+		 #panel{id=Controls#controls.text,
+			class="gtabtext", body=#span{text=R#gtab.text}} 
+		]
+	  }.
 	
 render_element(R) ->
-    Panel = #panel{class=gtab, body=render_body(wf:temp_id(), R, unselected)},
+    Panel = #panel{class="gtab", body=render_body(R)},
     element_panel:render_element(Panel).
 
-event({mouseover, Id, R}) ->
-    wf:update(Id, render_body(R, selected));
-event({mouseout, Id, R}) ->
-    wf:update(Id, render_body(R, unselected));
-event({click, Id, R}) ->
-    case R#gtab.postback of
-	undefined -> ok;
-	Postback ->
-	    Module = wf:coalesce([R#gtab.delegate, wf_context:page_module()]),
-	    Module:event(Postback)
-    end,
-    wf:replace(Id, render_body(wf:temp_id(),
-			       R#gtab{state=selected}, unselected)).
+event({mouseover, Controls, R}) ->
+    State = wf:state(Controls#controls.mainpanel),
+    case State#state.selected of
+	false -> wf:wire(Controls#controls.img, #appear{ speed=effect_speed() });
+	true -> ok
+    end;
+event({mouseout, Controls, R}) ->
+    State = wf:state(Controls#controls.mainpanel),
+    case State#state.selected of
+	false -> wf:wire(Controls#controls.img, #fade{ speed=effect_speed() });
+        true -> ok
+    end;
+event({click, Controls, R}) ->
+    State = wf:state(Controls#controls.mainpanel),
+    case State#state.selected of
+	false ->
+	    case R#gtab.postback of
+		undefined -> ok;
+		Postback ->
+		    Module = wf:coalesce([R#gtab.delegate,
+					  wf_context:page_module()]),
+		    Module:event(Postback)
+	    end,
+
+	    wf:wire(Controls#controls.img, #appear{ speed=effect_speed() }),
+	    select(Controls),
+
+	    wf:state(Controls#controls.mainpanel, State#state{selected = true});
+
+	true -> ok
+    end.
 
 

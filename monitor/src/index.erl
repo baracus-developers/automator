@@ -40,7 +40,7 @@ render_mainpanel(Id) ->
 	"Users" -> #users{}
     end.
 
-event({selected, Id}) -> 
+event({selected, Id}) ->
     wf:update(mainPanel, render_mainpanel(Id));
 event(logout) ->
     wf:logout(),
