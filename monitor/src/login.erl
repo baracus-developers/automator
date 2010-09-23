@@ -8,8 +8,10 @@ title() -> "CloudBuilder: Authentication Required".
 
 layout() ->
     [
-     #image { class="login-logo", image="/images/cloudbuilder-logo.png"},
-     #panel { body=[
+     #panel{ class="login-logo",
+	     body=#image{image="/images/cloudbuilder-logo.png"}},
+     #panel { class="login-input-panel",
+	      body=[
 		    #image { class="openid-logo",
 			     image="http://openid.net/images/login-bg.gif"},
 		    #textbox {class="login-input",
@@ -17,6 +19,9 @@ layout() ->
 		    #button { class="login-button",
 			      id=button, text="Login", postback=click}
 		   ]
+	    },
+     #panel { class="workloadiq-logo",
+	      body=#image{image="/images/WorkloadIQ_logo.png"}
 	    }
     ].
 

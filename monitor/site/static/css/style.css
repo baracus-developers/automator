@@ -140,9 +140,22 @@ a:hover, a:active {
 .login-lightbox {
     background-color: #c1c1c1;
     border: solid 5px #c1c1c1;
+    text-align: center;
 }
 
 .login-logo {
     background-color: #54585b;
+}
+
+.login-input {
+    width: 350px;
+}
+
+.login-input-panel {
+    margin: 2em;
+}
+
+.workloadiq-logo {
+    text-align: right;
 }
 
