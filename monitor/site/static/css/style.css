@@ -159,3 +159,11 @@ a:hover, a:active {
     text-align: right;
 }
 
+.outer-backsplash {
+    background-color: #848484
+}
+
+.inner-backsplash {
+    margin: 2em;
+}
+
