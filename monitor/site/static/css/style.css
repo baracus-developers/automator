@@ -78,6 +78,10 @@ a:hover, a:active {
     border-spacing: 1px;
 }
 
+.nodes {
+    width: 100%;
+}
+
 .gbar {
     position: absolute;
     border: 0px;
