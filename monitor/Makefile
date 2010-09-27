@@ -14,7 +14,7 @@ MODULES = $(subst $(space),$(commaspace), $(WSMODULES))
 INCLUDES += -I/usr/lib
 INCLUDES += -I./include
 
-all: application release
+all: application release tests
 
 application: $(OBJS) $(EBINDIR)/monitor.app Makefile
 
@@ -40,6 +40,13 @@ $(OBJDIR)/monitor.boot: monitor.rel application
 	@echo "Compiling (Release) $< to $@"
 	@mkdir -p $(OBJDIR)
 	@erlc -pa /usr/lib/yaws/ebin -pa $(EBINDIR) -o $(OBJDIR) $<
+
+tests: application
+	@echo "Running unit tests.."
+	@erl -noshell $(PKGS) \
+	-eval "eunit:test(\"$(EBINDIR)\", [verbose])" \
+	-yaws embedded true \
+	 -s init stop
 
 clean: 
 	@rm -f *~

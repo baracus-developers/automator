@@ -15,6 +15,17 @@ toolbar() ->
     ].
 
 body() ->
+    S = self(),
+    {ok, TaskPid} = wf:comet(fun() -> comet_init(S) end),
+
+    receive
+	{ready, ServerPid} ->
+	    comet_server:config(TaskPid, ServerPid),
+	    ok
+    after 1000 ->
+	    throw(comet_error)
+    end,
+
     [
      #panel{ class="titlebar",
 	     body=[
@@ -35,10 +46,27 @@ body() ->
     ].
 
 render_mainpanel(Id) ->
+    comet_server:flush_jobs(),
+
     case Id of
 	"Pools" -> #pools{};
 	"Users" -> #users{}
     end.
+
+comet_init(From) ->
+    {ok, ServerPid} = comet_server:start_link(),
+
+    From ! {ready, ServerPid},
+
+    comet_loop().
+
+comet_loop() ->
+    receive
+       'INIT' -> ok;
+       {execute, Job} ->
+	    Job()
+    end,
+    comet_loop().
 
 event({selected, Id}) ->
     wf:update(mainPanel, render_mainpanel(Id));
