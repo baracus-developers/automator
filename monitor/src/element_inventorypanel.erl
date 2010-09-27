@@ -1,11 +1,11 @@
--module(element_pools).
+-module(element_inventorypanel).
 -export([reflect/0, render_element/1]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include_lib("hostinfo.hrl").
 -include("wf_elements.hrl").
 
-reflect() -> record_info(fields, pools).
+reflect() -> record_info(fields, inventorypanel).
 
 get_host(Host) ->
     {ok, HostInfo} = hosts_server:get_hostinfo(Host),

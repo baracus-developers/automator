@@ -10,7 +10,7 @@ main() -> #template { file="./monitor/site/templates/bare.html" }.
 title() -> "Novell Cloud-Builder".
 
 toolbar() ->
-    [ {"/images/Search.png", "/images/Search-bw.png", "Pools"},
+    [ {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
       {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
     ].
 
@@ -42,14 +42,14 @@ body() ->
 			  body=#gbar{tabs=toolbar(), postback=selected}}
 		  ]
 	   },
-     #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Pools")}
+     #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Inventory")}
     ].
 
 render_mainpanel(Id) ->
     comet_server:flush_jobs(),
 
     case Id of
-	"Pools" -> #pools{};
+	"Inventory" -> #inventorypanel{};
 	"Users" -> #users{}
     end.
 

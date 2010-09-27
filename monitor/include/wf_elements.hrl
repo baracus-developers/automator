@@ -10,5 +10,5 @@
 
 
 % main panels
--record(pools, {?ELEMENT_BASE(element_pools)}).
+-record(inventorypanel, {?ELEMENT_BASE(element_inventorypanel)}).
 -record(users, {?ELEMENT_BASE(element_users)}).
