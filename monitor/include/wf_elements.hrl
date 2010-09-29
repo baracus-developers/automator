@@ -7,6 +7,7 @@
 	       tabs, default, postback, delegate}).
 
 -record(backsplash, {?ELEMENT_BASE(element_backsplash), body}).
+-record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data}).
 
 
 % main panels

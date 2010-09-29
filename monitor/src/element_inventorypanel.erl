@@ -20,64 +20,24 @@ get_pools() ->
     {ok, Pools} = pools_server:enum(),
     Pools.
 
-render_rows(Data) ->
-    Map = [
-	   macLabel@text, 
-	   statusLabel@text
-	  ],
-
-    #bind { id=tableBinding,
-           data=Data,
-           map=Map,
-           transform=fun alternate_color/2,
-           body=#tablerow {
-             id=row,
-             cells=[
-		    #tablecell { body=#checkbox{} },
-                    #tablecell { id=macLabel },
-                    #tablecell { id=statusLabel }
-                   ]
-            }
-         }.
-
--record(acc, {color, row}).
-
-subst(X) ->
-    case X of
-       $: -> $-;
-       Else -> Else
-    end.
-
-row(Id) ->
-    "row" ++ [subst(X) || X <- Id].
-
-%%% ALTERNATE BACKGROUND COLORS %%%
-alternate_color(DataRow, []) ->
-    alternate_color(DataRow, #acc{color=odd, row=1});
-
-alternate_color([Id, Status]=DataRow, Acc) ->
-    Row = Acc#acc.row,
-    {Next, Class} = case Acc#acc.color of
-       even -> {odd, evenrow};
-       odd -> {even, oddrow}
-    end,
-    {DataRow,
-     Acc#acc{row=Row+1, color=Next},
-     [{row@class, Class}, {row@id, row(Id)}]
-    }.
-
 render_table() ->
-    #table{ class="nodes",
-	    rows=[
-		  #tablerow {cells=[
-				    #tableheader { text="" },
-				    #tableheader { text="MAC" },
-				    #tableheader { text="Status" }
-				   ]
-			    },
-		  render_rows(get_hosts())
-		 ]
-	  }.
+    #cbtable{class="nodes",
+	     data=get_hosts(),
+	     map= [
+		   macLabel@text, 
+		   statusLabel@text
+		  ],
+             header=[
+		     #tableheader { text="" },
+		     #tableheader { text="MAC" },
+		     #tableheader { text="Status" }
+		    ],
+	     rowspec=[
+		      #tablecell { body=#checkbox{} },
+		      #tablecell { id=macLabel },
+		      #tablecell { id=statusLabel }
+		     ]
+	    }.
 
 handle_event(Id, Event) ->
     wf:update(Id, render_table()),
