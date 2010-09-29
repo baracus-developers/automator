@@ -2,6 +2,7 @@
 -export([reflect/0, render_element/1, event/1]).
 
 -include_lib("nitrogen/include/wf.inc").
+-include_lib ("nitrogen/include/google_chart.hrl").
 -include_lib("hostinfo.hrl").
 -include("wf_elements.hrl").
 
@@ -16,11 +17,8 @@ get_hosts() ->
     [get_host(Host) || Host <- Hosts].
 
 get_pools() ->
-    [
-     "Default",
-     "Unassigned",
-     "High End"
-    ].
+    {ok, Pools} = pools_server:enum(),
+    Pools.
 
 render_rows(Data) ->
     Map = [
@@ -72,7 +70,7 @@ render_table() ->
     #table{ class="nodes",
 	    rows=[
 		  #tablerow {cells=[
-				    #tableheader { text="Select" },
+				    #tableheader { text="" },
 				    #tableheader { text="MAC" },
 				    #tableheader { text="Status" }
 				   ]
@@ -88,7 +86,33 @@ handle_event(Id, Event) ->
 render_pools() ->
     #backsplash{ body=[
 		       #h1{text="Pools"},
-		       #list{body=[#listitem{text=Name} || Name <- get_pools()]}
+		       #dropdown{id=select_pool,
+				 value="Default",
+				 postback=select_pool,
+				 delegate=?MODULE,
+				 options=[
+					  #option{text=Name, value=Name}
+					  || Name <- get_pools()
+					 ]
+				},
+		       #p{},
+		       #google_chart {
+				  title="\"Default\" Pool Capacity",
+				  type=pie3d,
+				  width=400, height=250,
+				  
+				  axes=[
+					#chart_axis { position=bottom,
+						      labels=["In Use",
+							      "Free",
+							      "Sick"] }
+				       ],
+				  data=[
+					#chart_data { legend="Data 1", 
+						      values=[45, 50, 5] 
+						    }
+				       ]
+				 }
 		      ]
 	       }.
 
@@ -100,15 +124,6 @@ render_nodes() ->
 				  fun(Event) -> handle_event(Id, Event) end),   
     #backsplash{ body=[
 		       #h1{ text="Nodes"},
-		       #dropdown{id=select_pool,
-				 value="Default",
-				 postback=select_pool,
-				 delegate=?MODULE,
-				 options=[
-					  #option{text=Name, value=Name}
-					  || Name <- get_pools()
-					 ]
-				},
 		       #panel{ id=Id, body = render_table()}
 		      ]
 	       }.

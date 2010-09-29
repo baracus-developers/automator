@@ -6,7 +6,7 @@
 body { 
     font-family: "Lucida Grande", "Segoe UI", Tahoma, Helvetica, Arial, sans-serif; 
     font-size: 14px;
-    line-height: 30px;
+    line-height: 20px;
     background-color: #c1c1c1;
     margin: 0;
 }
@@ -14,12 +14,12 @@ body {
 h1 {
     font-family: Arial, sans-serif;
     font-weight: bold;
-    padding-bottom: 7px;
     border-bottom: dashed 1px #DDD;
     font-size: 1.875em;
     line-height: 1.066667em;
-    margin-top: 1.6em;
-    margin-bottom: 1.6em;
+    margin-bottom: 1em;
+    text-align: center;
+    color: white;
 }
 
 h2 {
@@ -168,6 +168,7 @@ a:hover, a:active {
 }
 
 .inner-backsplash {
-    margin: 2em;
+    margin: 1em;
+    padding: 1em;
 }
 

@@ -11,6 +11,8 @@ init(_Args) ->
           [
 	   {hosts_server, {hosts_server, start_link, []},
             permanent, brutal_kill, worker, [hosts_server]},
+	   {pools_server, {pools_server, start_link, []},
+            permanent, brutal_kill, worker, [pools_server]},
 	   {machines_server, {machines_server, start_link, []},
             permanent, brutal_kill, worker, [machines_server]}
 	  ]}}.
