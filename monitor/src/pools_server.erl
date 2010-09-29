@@ -37,7 +37,7 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
-    genevent_bridge:add_handler(host_events, self(), self()),
+    genevent_bridge:add_genserver_handler(host_events, self(), self()),
     {ok, #state{}}.
 
 create(Pool) ->
@@ -110,19 +110,16 @@ handle_call(enum, _From, State) ->
 handle_call(Request, From, State) ->
     {stop, {unexpected_call, Request}, State}.
 
-handle_cast({genevent_bridge, {system, discovery, {Mac, _Inventory}}}, State) ->
-    ok = assign_to_pool(Mac, "Unassigned", unconfigured, State),
-    {noreply, State};
 handle_cast({genevent_bridge, Event}, State) ->
     {noreply, State};
 handle_cast(Request, State) ->
-    {stop, {unexpected_cast, Request}, State}.
+    throw(unexpected).
 
 handle_info(Info, State) ->
-    {stop, {unexpected_info, Info}, State}.
+    throw(unexpected).
 
 terminate(Reason, State) ->
-    genevent_genserver_bridge:delete_handler(host_events, self()),
+    genevent_bridge:delete_handler(host_events, self()),
     ok.
 
 code_change(OldVsn, State, Extra) ->
