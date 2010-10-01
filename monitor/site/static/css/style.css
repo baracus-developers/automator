@@ -180,3 +180,6 @@ a:hover, a:active {
     padding: 1em;
 }
 
+div.inplace_textbox.label {
+    font-weight: normal;
+}

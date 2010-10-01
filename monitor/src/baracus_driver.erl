@@ -1,5 +1,6 @@
 -module(baracus_driver).
 -include_lib("bahost_record.hrl").
+-include("power.hrl").
 -compile(export_all).
 
 tablename() -> bahost.
@@ -14,7 +15,34 @@ start_link() ->
 status(Mac) ->
     void.
 
+paramdecode([{_, undefined} | T], Acc) ->
+    paramdecode(T, Acc);
+paramdecode([{mac, _Val} | T], Acc) ->
+    paramdecode(T, Acc);
+paramdecode([{host, Val} | T], Acc) ->
+    paramdecode(T, Acc ++ " --host " ++ Val);
+paramdecode([{bmcaddr, Val} | T], Acc) ->
+    paramdecode(T, Acc ++ " --bmcaddr " ++ Val);
+paramdecode([{type, Val} | T], Acc) ->
+    paramdecode(T, Acc ++ " --ctype " ++ Val);
+paramdecode([{username, Val} | T], Acc) ->
+    paramdecode(T, Acc ++ " --login " ++ Val);
+paramdecode([{password, Val} | T], Acc) ->
+    paramdecode(T, Acc ++ " --passwd " ++ Val);
+paramdecode([], Acc) ->
+    Acc.
+
 configure_power(Mac, Config) ->
+    [_ | RawParams] = tuple_to_list(Config),
+    Fields = record_info(fields, powernode),
+    Params = lists:zip(Fields, RawParams),
+    
+    Cmd = paramdecode(Params, "bapower add --mac " ++ Mac),
+
+    io:format("Cmd: ~s~n", [Cmd]),
+
+    util:os_cmd(Cmd),
+
     gen_event:notify(host_events, {baracus, power_configured, Mac}),
     void.
 

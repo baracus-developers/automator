@@ -1,5 +1,5 @@
 -module(element_powernodes).
--export([reflect/0, render_element/1, event/1]).
+-export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("power.hrl").
@@ -8,7 +8,7 @@
 reflect() -> record_info(fields, powernodes).
 
 coalesce(Value) ->
-    wf:coalesce([Value, ""]).
+    wf:coalesce([Value, "-"]).
 
 -record(node, {mac, selected, data}).
 
@@ -49,12 +49,14 @@ flatten_node(Node) ->
      Node#node.mac,
      coalesce(PowerNode#powernode.type),
      coalesce(PowerNode#powernode.host),
+     {host, Node#node.mac},
      coalesce(PowerNode#powernode.bmcaddr),
+     {bmcaddr, Node#node.mac},
      coalesce(PowerNode#powernode.username),
+     {username, Node#node.mac},
      coalesce(PowerNode#powernode.password),
+     {password, Node#node.mac},
      [
-      #link{text="edit", delegate=?MODULE, postback={node_edit, Node#node.mac}},
-      " ",
       #link{text="submit", delegate=?MODULE, postback={node_submit, Node#node.mac}}
      ]
     ].
@@ -69,13 +71,17 @@ render_powernodes() ->
 		   selected@id,
 		   selected@checked,
 		   selected@postback,
-		   macLabel@text,
-		   typeLabel@text,
-		   hostLabel@text,
-		   bmcAddrLabel@text,
-		   usernameLabel@text,
-		   passwordLabel@text,
-		   commandLabel@body
+		   mac@text,
+		   type@value,
+		   host@text,
+		   host@tag,
+		   bmcaddr@text,
+		   bmcaddr@tag,
+		   username@text,
+		   username@tag,
+		   password@text,
+		   password@tag,
+		   actions@body
 		  ],
              header=[
 		     #tableheader{body=[
@@ -98,13 +104,35 @@ render_powernodes() ->
 		    ],
 	     rowspec=[
 		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE}},
-		      #tablecell { id=macLabel },
-		      #tablecell { id=typeLabel },
-		      #tablecell { id=hostLabel },
-		      #tablecell { id=bmcAddrLabel },
-		      #tablecell { id=usernameLabel },
-		      #tablecell { id=passwordLabel },
-		      #tablecell { id=commandLabel }
+		      #tablecell { id=mac },
+		      #tablecell { body=#dropdown{id=type,
+						  options=[
+							   #option{text="undefined",
+								   value="-"
+								  },
+							   #option{text="IPMI",
+								   value="IPMI"
+								  }
+							  ]
+						 }
+				 },
+		      #tablecell { body=#inplace_textbox{id=host,
+							 delegate=?MODULE
+							}
+				 },
+		      #tablecell { body=#inplace_textbox{id=bmcaddr,
+							 delegate=?MODULE
+							}
+				 },
+		      #tablecell { body=#inplace_textbox{id=username,
+							 delegate=?MODULE
+							}
+				 },
+		      #tablecell { body=#inplace_textbox{id=password,
+							 delegate=?MODULE
+							}
+				 },
+		      #tablecell { id=actions }
 		     ]
 	    }.
 
@@ -138,34 +166,19 @@ event(nodes_select_none) ->
     ok;
 event({node_toggle, Id, Mac}) ->
     Value = wf:q(Id),
-    io:format("node-toggle: ~p = ~p~n", [Id, Value]),
     Db = wf:state(powernodes),
     case dict:find(Mac, Db) of
 	{ok, Node} ->
 	    NewDb = dict:update(Mac, Node#node{selected=Value}, Db),
 	    wf:state(powernodes, NewDb)
     end;
-event({node_edit, Mac}) ->
-    Panel = #lightbox{ id="edit-node",
-		       body=#panel{class="general-lightbox", 
-				   body=[
-					 #h2{ text="Edit host" },
-					 #flash{},
-					 "Host: " ++ Mac,
-					 #button{text="Cancel",
-						 postback=node_cancel_edit,
-						 delegate=?MODULE},
-					 #button{text="Save",
-						 postback=node_save_edit,
-						 delegate=?MODULE}
-					 ]
-				  }
-		     },
-    wf:insert_top("admission-panel", Panel);
-event(node_cancel_edit) ->
-    wf:remove("edit-node");
-event(node_save_edit) ->
-    wf:remove("edit-node");
+event({node_submit, Mac}) ->
+    power_server:submit_node(Mac);
 event(Event) ->
     ok.
+
+inplace_textbox_event({Type, Mac}, Value) ->
+    power_server:set_param(Mac, Type, Value),
+    Value.
+
 
