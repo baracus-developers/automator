@@ -8,7 +8,7 @@
 -include_lib("rules.hrl").
 -include("wf_elements.hrl").
 
-reflect() -> record_info(fields, inventorypanel).
+reflect() -> record_info(fields, admissionpanel).
 
 render_rule(HostRule) ->
     #listitem{body=[
