@@ -113,14 +113,17 @@ a:hover, a:active {
 .gcell {
     position: float;
     float: left;
+    line-height: 3em;
 }
 
 .gtab {
-    width: 60px;
+    width: 70px;
     height: 35px;
     position: float;
     float: left;
-    margin: 5px
+    margin: 5px;
+    position: relative;
+    text-align: center;
 }
 
 .gtabtext {
@@ -133,7 +136,8 @@ a:hover, a:active {
 
 .gtabimage_selected {
     position: absolute;
-    top: 5px;
+    left: 22px;
+    top: 0;
 }
 
 .gtabtext_selected {
@@ -141,7 +145,7 @@ a:hover, a:active {
     color: #fff;
 }
 
-.login-lightbox {
+.general-lightbox {
     background-color: #c1c1c1;
     border: solid 5px #c1c1c1;
     text-align: center;
@@ -153,6 +157,10 @@ a:hover, a:active {
 
 .login-input {
     width: 350px;
+}
+
+.lightbox_background {
+    opacity: 0.7;
 }
 
 .login-input-panel {

@@ -1,0 +1,2 @@
+
+-record(hostrule, {name, xpath}).

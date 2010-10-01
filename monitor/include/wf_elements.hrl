@@ -12,4 +12,5 @@
 
 % main panels
 -record(inventorypanel, {?ELEMENT_BASE(element_inventorypanel)}).
+-record(admissionpanel, {?ELEMENT_BASE(element_admissionpanel)}).
 -record(users, {?ELEMENT_BASE(element_users)}).

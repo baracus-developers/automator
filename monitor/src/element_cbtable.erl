@@ -30,7 +30,7 @@ render_element(R) ->
 alternate_color(DataRow, []) ->
     alternate_color(DataRow, #acc{color=odd, row=1});
 
-alternate_color([Id, Status]=DataRow, Acc) ->
+alternate_color(DataRow, Acc) ->
     Row = Acc#acc.row,
     {Next, Class} = case Acc#acc.color of
        even -> {odd, evenrow};

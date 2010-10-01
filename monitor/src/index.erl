@@ -10,9 +10,11 @@ main() -> #template { file="./monitor/site/templates/bare.html" }.
 title() -> "Novell Cloud-Builder".
 
 toolbar() ->
-    [ {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
-      {"/images/Warning.png", "/images/Warning-bw.png", "Alerts"},
-      {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
+    [
+     {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
+     {"/images/tickets-small.png", "/images/tickets-small-bw.png", "Admission"},
+     {"/images/Warning.png", "/images/Warning-bw.png", "Alerts"},
+     {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
     ].
 
 body() ->
@@ -51,6 +53,7 @@ render_mainpanel(Id) ->
 
     case Id of
 	"Inventory" -> #inventorypanel{};
+	"Admission" -> #admissionpanel{};
 	"Alerts" -> #panel{};
 	"Users" -> #users{}
     end.

@@ -26,7 +26,7 @@ layout() ->
     ].
 
 body() ->
-     #lightbox { body=[#panel {class="login-lightbox", body = layout()}]}.
+     #lightbox { body=[#panel {class="general-lightbox", body = layout()}]}.
 	
 event(click) ->
     ClaimedId = wf:q(claimed_id),

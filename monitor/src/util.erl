@@ -1,5 +1,6 @@
 -module(util).
 -export([os_cmd_format/2, os_cmd/2, os_cmd/1]).
+-export([open_table/2, replicas/0, atomic_query/1]).
 
 os_cmd_format(CmdFormat, Params) ->
     EncodedCmd = io_lib:format(CmdFormat, Params),    
@@ -26,4 +27,17 @@ cmd_receive(Port, Acc) ->
 	    {ok, Status, Acc}
     end.
 
+open_table(Name, TabDef) ->
+    case mnesia:create_table(Name, TabDef) of
+	{atomic, ok} -> ok;
+	{aborted, {already_exists, Name}} -> ok;
+	Error -> throw(Error)
+    end.
 
+replicas() ->
+    [node()].
+
+atomic_query(Q) ->
+    F = fun() -> qlc:e(Q) end,
+    {atomic, Val} = mnesia:transaction(F),
+    Val.

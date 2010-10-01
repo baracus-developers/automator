@@ -37,8 +37,11 @@ powercycle(Mac) ->
 powerstatus(Mac) ->
     on.
 
-get_inventory(Mac) ->
-    util:os_cmd_format("bahost detail inventory --mac ~s", [Mac]).
+get_inventory(Mac) -> 
+    Inventory = util:os_cmd_format("bahost detail inventory --mac ~s", [Mac]),
+    {InvetoryXml, _} = xmerl_scan:string(Inventory),
+
+    InvetoryXml.
 
 refresh() ->
     RawData = util:os_cmd("bahost list states"),

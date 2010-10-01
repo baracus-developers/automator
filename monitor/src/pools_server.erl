@@ -47,7 +47,7 @@ enum() ->
     gen_server:call(?MODULE, enum).
 
 enum_i() ->
-    do(qlc:q([X#pool.name || X <- mnesia:table(pools)])).
+    util:atomic_query(qlc:q([X#pool.name || X <- mnesia:table(pools)])).
 
 assign_to_pool(Mac, Pool, Category, State) -> 
     F = fun() ->
@@ -92,10 +92,6 @@ create_pool(Pool, System) ->
 	    exists
     end.
 
-do(Q) ->
-    F = fun() -> qlc:e(Q) end,
-    {atomic, Val} = mnesia:transaction(F),
-    Val.
 
 handle_call({create, Pool}, _From, State) ->
     case create_pool(Pool, false) of
