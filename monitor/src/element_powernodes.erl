@@ -42,10 +42,13 @@ flatten_node(Node) ->
     Id = [subst(X) || X <- Node#node.mac],
     SelectedId = "check-" ++ Id,
 
+    [_, Zone] = string:tokens(atom_to_list(node()), "@"),
+
     [
      SelectedId,
      Node#node.selected,
      {node_toggle, SelectedId, Node#node.mac},
+     Zone,
      Node#node.mac,
      coalesce(PowerNode#powernode.type),
      coalesce(PowerNode#powernode.host),
@@ -71,6 +74,7 @@ render_powernodes() ->
 		   selected@id,
 		   selected@checked,
 		   selected@postback,
+		   zone@text,
 		   mac@text,
 		   type@value,
 		   host@text,
@@ -94,6 +98,7 @@ render_powernodes() ->
 					      postback=nodes_select_none}
 				       ]
 				 },
+		     #tableheader{text="Zone"},
 		     #tableheader{text="MAC"},
 		     #tableheader{text="Type"},
 		     #tableheader{text="Host"},
@@ -104,6 +109,7 @@ render_powernodes() ->
 		    ],
 	     rowspec=[
 		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE}},
+		      #tablecell { id=zone },
 		      #tablecell { id=mac },
 		      #tablecell { body=#dropdown{id=type,
 						  options=[

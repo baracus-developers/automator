@@ -12,6 +12,7 @@ title() -> "Novell Cloud-Builder".
 toolbar() ->
     [
      {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
+     {"/images/globe.png", "/images/globe-bw.png", "Zones"},
      {"/images/tickets-small.png", "/images/tickets-small-bw.png", "Admission"},
      {"/images/Warning.png", "/images/Warning-bw.png", "Alerts"},
      {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
@@ -53,6 +54,7 @@ render_mainpanel(Id) ->
 
     case Id of
 	"Inventory" -> #inventorypanel{};
+	"Zones" -> #panel{};
 	"Admission" -> #admissionpanel{};
 	"Alerts" -> #panel{};
 	"Users" -> #users{}
