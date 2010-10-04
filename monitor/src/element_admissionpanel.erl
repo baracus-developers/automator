@@ -4,7 +4,7 @@
 -include_lib("nitrogen/include/wf.inc").
 -include_lib ("nitrogen/include/google_chart.hrl").
 -include_lib("hostinfo.hrl").
--include_lib("power.hrl").
+-include_lib("staging.hrl").
 -include_lib("rules.hrl").
 -include("wf_elements.hrl").
 
@@ -34,44 +34,44 @@ render_rules() ->
 		      ]
 	       }.
 
-render_powerprofile(Profile) ->
+render_stagingprofile(Profile) ->
     #listitem{body=[
-		    Profile#powerprofile.name ++ " ",
+		    Profile#stagingprofile.name ++ " ",
 		    #link{ text="delete",
 			   delegate=?MODULE,
-			   postback={delete_profile, Profile#powerprofile.name}}
+			   postback={delete_profile, Profile#stagingprofile.name}}
 		   ]
 	     }.
 
-render_powerprofiles() ->
-    {ok, Profiles} = power_server:enum_profiles(),
+render_stagingprofiles() ->
+    {ok, Profiles} = staging_server:enum_profiles(),
 
     #list{ class="profiles",
 	   body=[
-		 render_powerprofile(Profile) ||
+		 render_stagingprofile(Profile) ||
 		    Profile <- Profiles
 		]
 	 }.
 
 
-render_power() ->
-    #backsplash{ id="power-panel",
+render_staging() ->
+    #backsplash{ id="staging-panel",
 	         body=[
-		       #h1{ text="Power Configuration"},
+		       #h1{ text="Staging Configuration"},
 		       #label{text="Profiles"},
-		       #panel{ id="power-profiles",
-			       body=render_powerprofiles()
+		       #panel{ id="staging-profiles",
+			       body=render_stagingprofiles()
 			     },
 		       #button{text="+", postback=add_profile, delegate=?MODULE},
-		       #powernodes{}
+		       #nodestaging{}
 		      ]
 	       }.
 
 handle_event({system, hostrule, _Operation, _HostRule}) ->
     wf:update("rules-list", render_rules_list()),
     wf:flush();
-handle_event({system, powerprofile, _Operation, _Profile}) ->
-    wf:update("power-profiles", render_powerprofiles()),
+handle_event({system, stagingprofile, _Operation, _Profile}) ->
+    wf:update("staging-profiles", render_stagingprofiles()),
     wf:flush();
 handle_event(Event) ->
     ok.
@@ -83,7 +83,7 @@ render_element(R) ->
     Panel = #panel{ body=#panel{id="admission-panel",
 				body=[
 				      render_rules(),
-				      render_power()
+				      render_staging()
 				     ]
 			       }
 		  },
@@ -127,7 +127,7 @@ event(add_profile) ->
     Panel = #lightbox{ id="add-profile",
 		       body=#panel{class="general-lightbox", 
 				   body=[
-					 #h2{ text="Add new power profile" },
+					 #h2{ text="Add new staging profile" },
 					 #flash{},
 					 #label{text="Profile name:"},
 					 #textbox{id=profilename },
@@ -171,10 +171,10 @@ event(save_profile) ->
     Username = wf:q(username),
     Password = wf:q(password),
 
-    Profile = #powerprofile{name=Name, rule=Rule, type=Type, host=Host, bmcaddr=BMCAddr,
+    Profile = #stagingprofile{name=Name, rule=Rule, type=Type, host=Host, bmcaddr=BMCAddr,
 			    username=Username, password=Password}, 
     
-    case power_server:add_profile(Profile) of
+    case staging_server:add_profile(Profile) of
 	ok ->
 	    wf:remove("add-profile");
 	{error, Error} ->
@@ -186,5 +186,5 @@ event(cancel_profile) ->
     wf:remove("add-profile");
 
 event({delete_profile, Name}) ->
-    power_server:delete_profile(Name).
+    staging_server:delete_profile(Name).
 

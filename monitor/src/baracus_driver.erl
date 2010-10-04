@@ -1,6 +1,6 @@
 -module(baracus_driver).
 -include_lib("bahost_record.hrl").
--include("power.hrl").
+-include("baracus.hrl").
 -compile(export_all).
 
 tablename() -> bahost.
@@ -32,9 +32,9 @@ paramdecode([{password, Val} | T], Acc) ->
 paramdecode([], Acc) ->
     Acc.
 
-configure_power(Mac, Config) ->
+configure_power(Mac, Config) when is_record(Config, powerconfig) ->
     [_ | RawParams] = tuple_to_list(Config),
-    Fields = record_info(fields, powernode),
+    Fields = record_info(fields, powerconfig),
     Params = lists:zip(Fields, RawParams),
     
     Cmd = paramdecode(Params, "bapower add --mac " ++ Mac),

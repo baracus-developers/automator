@@ -1,7 +1,8 @@
--module(power_server).
+-module(staging_server).
 -behavior(gen_server).
 -include_lib("stdlib/include/qlc.hrl").
--include_lib("power.hrl").
+-include("staging.hrl").
+-include("baracus.hrl").
 
 -export([init/1, start_link/0, handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
@@ -14,23 +15,23 @@ start_link() ->
 
 init(_Args) ->
     genevent_bridge:add_genserver_handler(host_events, self(), self()),
-    ok = util:open_table(powerprofiles,
+    ok = util:open_table(stagingprofiles,
 			 [
-			  {record_name, powerprofile},
+			  {record_name, stagingprofile},
 			  {attributes,
-			   record_info(fields, powerprofile)},
+			   record_info(fields, stagingprofile)},
 			  {disc_copies, util:replicas()}
 			 ]),
-    ok = util:open_table(powernodes,
+    ok = util:open_table(stagingnodes,
 			 [
-			  {record_name, powernode},
+			  {record_name, stagingnode},
 			  {attributes,
-			   record_info(fields, powernode)},
+			   record_info(fields, stagingnode)},
 			  {disc_copies, util:replicas()}
 			 ]),
     {ok, null}.
 
-add_profile(Profile) when is_record(Profile, powerprofile) ->
+add_profile(Profile) when is_record(Profile, stagingprofile) ->
     gen_server:call(?MODULE, {add_profile, Profile}).
 
 delete_profile(Name) ->
@@ -49,27 +50,27 @@ enum_nodes() ->
     gen_server:call(?MODULE, enum_nodes).
 
 enum_profiles_i() ->
-    util:atomic_query(qlc:q([X || X <- mnesia:table(powerprofiles)])).
+    util:atomic_query(qlc:q([X || X <- mnesia:table(stagingprofiles)])).
 
 enum_nodes_i() ->
-    util:atomic_query(qlc:q([X || X <- mnesia:table(powernodes)])).
+    util:atomic_query(qlc:q([X || X <- mnesia:table(stagingnodes)])).
 
-update_powernode(Record, host, Value) when is_record(Record, powernode) ->
-    Record#powernode{host=Value};
-update_powernode(Record, type, Value) when is_record(Record, powernode) ->
-    Record#powernode{type=Value};
-update_powernode(Record, bmcaddr, Value) when is_record(Record, powernode) ->
-    Record#powernode{bmcaddr=Value};
-update_powernode(Record, username, Value) when is_record(Record, powernode) ->
-    Record#powernode{username=Value};
-update_powernode(Record, password, Value) when is_record(Record, powernode) ->
-    Record#powernode{password=Value}.
+update_stagingnode(Record, host, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{host=Value};
+update_stagingnode(Record, type, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{type=Value};
+update_stagingnode(Record, bmcaddr, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{bmcaddr=Value};
+update_stagingnode(Record, username, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{username=Value};
+update_stagingnode(Record, password, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{password=Value}.
 
 handle_call({add_profile, Profile}, _From, State) ->
     F = fun() ->
-		case mnesia:read(powerprofiles, Profile#powerprofile.name, write) of
+		case mnesia:read(stagingprofiles, Profile#stagingprofile.name, write) of
 		    [] ->
-			mnesia:write(powerprofiles, Profile, write),
+			mnesia:write(stagingprofiles, Profile, write),
 			created;
 		    [Record] ->
 			exists
@@ -77,7 +78,7 @@ handle_call({add_profile, Profile}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, created} ->
-	    gen_event:notify(host_events, {system, powerprofile, added, Profile}),
+	    gen_event:notify(host_events, {system, stagingprofile, added, Profile}),
 	    {reply, ok, State};
 	{atomic, exists} ->
 	    {reply, {error, conflict}, State}
@@ -85,11 +86,11 @@ handle_call({add_profile, Profile}, _From, State) ->
 
 handle_call({delete_profile, Name}, _From, State) ->
     F = fun() ->
-		mnesia:delete(powerprofiles, Name, write)
+		mnesia:delete(stagingprofiles, Name, write)
 	end,
     case mnesia:transaction(F) of
 	{atomic, ok} ->
-	    gen_event:notify(host_events, {system, powerprofile, deleted, Name}),
+	    gen_event:notify(host_events, {system, stagingprofile, deleted, Name}),
 	    {reply, ok, State};
 	Error ->
 	    {reply, {error, Error}, State}
@@ -101,18 +102,18 @@ handle_call(enum_nodes, _From, State) ->
     {reply, {ok, enum_nodes_i()}, State};
 handle_call({set_param, Mac, Param, Value}, _From, State) ->
     F = fun() ->
-		case mnesia:read(powernodes, Mac, write) of
+		case mnesia:read(stagingnodes, Mac, write) of
 		    [] ->
 			noexists;
 		    [Record] ->
-			UpdatedRecord = update_powernode(Record, Param, Value),
-			mnesia:write(powernodes, UpdatedRecord, write),
+			UpdatedRecord = update_stagingnode(Record, Param, Value),
+			mnesia:write(stagingnodes, UpdatedRecord, write),
 			updated
 		end
 	end,
     case mnesia:transaction(F) of
 	{atomic, updated} ->
-	    gen_event:notify(host_events, {system, powernode, updated, Mac}),
+	    gen_event:notify(host_events, {system, stagingnode, updated, Mac}),
 	    {reply, ok, State};
 	{atomic, noexists} ->
 	    {reply, {error, noexists}, State}
@@ -120,16 +121,23 @@ handle_call({set_param, Mac, Param, Value}, _From, State) ->
 
 handle_call({submit_node, Mac}, _From, State) ->
     F = fun() ->
-		case mnesia:read(powernodes, Mac, write) of
+		case mnesia:read(stagingnodes, Mac, write) of
 		    [] ->
 			noexists;
 		    [Record] ->
-			case host_fsm:configure_power(Mac, Record) of
+			PowerConfig = #powerconfig{mac=Mac,
+						   type=Record#stagingnode.type,
+						   host=Record#stagingnode.host,
+						   username=Record#stagingnode.username,
+						   password=Record#stagingnode.password,
+						   bmcaddr=Record#stagingnode.bmcaddr
+						  },
+			case host_fsm:configure_power(Mac, PowerConfig) of
 			    ok ->
 				% FIXME: We can still roll back this transaction even if 
 				% baracus was updated and miss this delete.  We need to handle
 				% this case
-				mnesia:delete(powernodes, Mac, write);
+				mnesia:delete(stagingnodes, Mac, write);
 			    {error, Error} -> Error;
 			    Else -> Else
 			end
@@ -137,7 +145,7 @@ handle_call({submit_node, Mac}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, ok} ->
-	    gen_event:notify(host_events, {system, powernode, submitted, Mac}),
+	    gen_event:notify(host_events, {system, stagingnode, submitted, Mac}),
 	    {reply, ok, State};
 	{atomic, Error} ->
 	    {reply, {error, Error}, State};
@@ -150,17 +158,17 @@ handle_call(_Request, _From, _State) ->
 
 handle_cast({genevent_bridge, {system, discovery, {Mac, _Inventory}}}, State) ->
     F = fun() ->
-		case mnesia:read(powernodes, Mac, write) of
+		case mnesia:read(stagingnodes, Mac, write) of
 		    [] ->
-			Record = #powernode{mac=Mac},
-			mnesia:write(powernodes, Record, write),
+			Record = #stagingnode{mac=Mac},
+			mnesia:write(stagingnodes, Record, write),
 			created;
 		    [Record] ->
 			throw({exists, Mac})
 		end
 	end,
     {atomic, created} = mnesia:transaction(F),
-    gen_event:notify(host_events, {system, powernode, added, Mac}),
+    gen_event:notify(host_events, {system, stagingnode, added, Mac}),
     {noreply, State};
 
 handle_cast({genevent_bridge, Event}, State) ->

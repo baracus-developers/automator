@@ -1,11 +1,11 @@
--module(element_powernodes).
+-module(element_nodestaging).
 -export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
 
 -include_lib("nitrogen/include/wf.inc").
--include("power.hrl").
 -include("wf_elements.hrl").
+-include("staging.hrl").
 
-reflect() -> record_info(fields, powernodes).
+reflect() -> record_info(fields, nodestaging).
 
 coalesce(Value) ->
     wf:coalesce([Value, "-"]).
@@ -13,21 +13,21 @@ coalesce(Value) ->
 -record(node, {mac, selected, data}).
 
 update_db([Record | T], Db) ->
-    Node = case dict:find(Record#powernode.mac, Db) of
+    Node = case dict:find(Record#stagingnode.mac, Db) of
 	       {ok, Value} -> Value;
-	       error -> #node{mac=Record#powernode.mac, selected=false}
+	       error -> #node{mac=Record#stagingnode.mac, selected=false}
 	   end,
     update_db(T, dict:store(Node#node.mac, Node#node{data=Record}, Db));
 update_db([], Db) ->
     Db.
 
-get_powernodes() ->
-    Db = wf:state_default(powernodes, dict:new()),
-    {ok, Records} = power_server:enum_nodes(),
+get_stagingnodes() ->
+    Db = wf:state_default(stagingnodes, dict:new()),
+    {ok, Records} = staging_server:enum_nodes(),
 
     UpdatedDb = update_db(Records, Db),
 
-    wf:state(powernodes, UpdatedDb),
+    wf:state(stagingnodes, UpdatedDb),
     UpdatedDb.
 
 subst(X) ->
@@ -37,7 +37,7 @@ subst(X) ->
     end.
 
 flatten_node(Node) ->
-    PowerNode = Node#node.data,
+    StagingNode = Node#node.data,
     
     Id = [subst(X) || X <- Node#node.mac],
     SelectedId = "check-" ++ Id,
@@ -52,24 +52,24 @@ flatten_node(Node) ->
      Zone,
      Node#node.mac,
      TypeId,
-     coalesce(PowerNode#powernode.type),
+     coalesce(StagingNode#stagingnode.type),
      {type, TypeId, Node#node.mac},
-     coalesce(PowerNode#powernode.host),
+     coalesce(StagingNode#stagingnode.host),
      {host, Node#node.mac},
-     coalesce(PowerNode#powernode.bmcaddr),
+     coalesce(StagingNode#stagingnode.bmcaddr),
      {bmcaddr, Node#node.mac},
-     coalesce(PowerNode#powernode.username),
+     coalesce(StagingNode#stagingnode.username),
      {username, Node#node.mac},
-     coalesce(PowerNode#powernode.password),
+     coalesce(StagingNode#stagingnode.password),
      {password, Node#node.mac},
      [
       #link{text="submit", delegate=?MODULE, postback={node_submit, Node#node.mac}}
      ]
     ].
 
-render_powernodes() ->
+render_stagingnodes() ->
 
-    Nodes = [flatten_node(Node) || {_, Node} <- dict:to_list(get_powernodes())],
+    Nodes = [flatten_node(Node) || {_, Node} <- dict:to_list(get_stagingnodes())],
 
     #cbtable{class="nodes",
 	     data=Nodes,
@@ -151,11 +151,11 @@ render_powernodes() ->
 	    }.
 
 render_element(R) ->
-    comet_event_relay:add_handler(host_events, "powernodes",
+    comet_event_relay:add_handler(host_events, "stagingnodes",
 				  fun(Event) -> event(Event) end),   
 
-    Panel = #panel{ body=#panel{id="power-nodes",
-				body=render_powernodes()
+    Panel = #panel{ body=#panel{id="staging-nodes",
+				body=render_stagingnodes()
 			       }
 		  },
     element_panel:render_element(Panel).
@@ -164,13 +164,13 @@ update_selections(Value) ->
     F = fun(_, Node) ->
 		Node#node{selected=Value}
 	end,
-    Db = wf:state(powernodes),
-    wf:state(powernodes, dict:map(F, Db)),
-    wf:update("power-nodes", render_powernodes()),
+    Db = wf:state(stagingnodes),
+    wf:state(stagingnodes, dict:map(F, Db)),
+    wf:update("staging-nodes", render_stagingnodes()),
     ok.
 
 submit_node(Mac) ->
-    case power_server:submit_node(Mac) of
+    case staging_server:submit_node(Mac) of
 	ok -> "ok";
 	{error, Reason} -> "failed: " ++ Reason;
 	Else -> "failed"
@@ -191,10 +191,10 @@ render_submitstatus(Macs) ->
 					 ]
 				  }
 		     },
-    wf:insert_top("power-nodes", Panel).
+    wf:insert_top("staging-nodes", Panel).
 
-event({system, powernode, _Operation, _Profile}) ->
-    wf:update("power-nodes", render_powernodes()),
+event({system, stagingnode, _Operation, _Profile}) ->
+    wf:update("staging-nodes", render_stagingnodes()),
     wf:flush();
 event(nodes_select_all) ->
     update_selections(true),
@@ -204,11 +204,11 @@ event(nodes_select_none) ->
     ok;
 event({node_toggle, Id, Mac}) ->
     Value = wf:q(Id),
-    Db = wf:state(powernodes),
+    Db = wf:state(stagingnodes),
     case dict:find(Mac, Db) of
 	{ok, Node} ->
 	    NewDb = dict:update(Mac, Node#node{selected=Value}, Db),
-	    wf:state(powernodes, NewDb)
+	    wf:state(stagingnodes, NewDb)
     end;
 event({node_submit, Mac}) ->
     render_submitstatus([Mac]);
@@ -216,12 +216,12 @@ event(close_submitstatus) ->
     wf:remove("submit-status");
 event({type, Id, Mac}) ->
     Value = wf:q(Id),
-    power_server:set_param(Mac, type, Value);
+    staging_server:set_param(Mac, type, Value);
 event(Event) ->
     ok.
 
 inplace_textbox_event({Type, Mac}, Value) ->
-    power_server:set_param(Mac, Type, Value),
+    staging_server:set_param(Mac, Type, Value),
     Value.
 
 
