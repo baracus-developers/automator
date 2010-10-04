@@ -41,6 +41,7 @@ flatten_node(Node) ->
     
     Id = [subst(X) || X <- Node#node.mac],
     SelectedId = "check-" ++ Id,
+    TypeId = "type-" ++ Id,
 
     [_, Zone] = string:tokens(atom_to_list(node()), "@"),
 
@@ -50,7 +51,9 @@ flatten_node(Node) ->
      {node_toggle, SelectedId, Node#node.mac},
      Zone,
      Node#node.mac,
+     TypeId,
      coalesce(PowerNode#powernode.type),
+     {type, TypeId, Node#node.mac},
      coalesce(PowerNode#powernode.host),
      {host, Node#node.mac},
      coalesce(PowerNode#powernode.bmcaddr),
@@ -76,7 +79,9 @@ render_powernodes() ->
 		   selected@postback,
 		   zone@text,
 		   mac@text,
+		   type@id,
 		   type@value,
+		   type@postback,
 		   host@text,
 		   host@tag,
 		   bmcaddr@text,
@@ -112,14 +117,17 @@ render_powernodes() ->
 		      #tablecell { id=zone },
 		      #tablecell { id=mac },
 		      #tablecell { body=#dropdown{id=type,
-						  options=[
-							   #option{text="undefined",
-								   value="-"
-								  },
-							   #option{text="IPMI",
-								   value="IPMI"
-								  }
-							  ]
+						  options=lists:flatten([
+									 #option{text="undefined",
+										 value="-"
+										}
+									],
+									[
+									 #option{text=Type, value=Type} ||
+									    Type <- baracus_driver:get_bmctypes()
+									]
+								       ),
+						  delegate=?MODULE
 						 }
 				 },
 		      #tablecell { body=#inplace_textbox{id=host,
@@ -161,6 +169,30 @@ update_selections(Value) ->
     wf:update("power-nodes", render_powernodes()),
     ok.
 
+submit_node(Mac) ->
+    case power_server:submit_node(Mac) of
+	ok -> "ok";
+	{error, Reason} -> "failed: " ++ Reason;
+	Else -> "failed"
+    end.
+
+render_submitstatus(Macs) ->
+
+    Results = [{Mac, submit_node(Mac)} || Mac <- Macs],
+
+    Panel = #lightbox{ id="submit-status",
+		       body=#panel{class="general-lightbox", 
+				   body=[
+					 #h2{ text="Submit status" },
+					 #list{ body=[#listitem{text=wf:f("~s (~s)", [Mac, Status])} ||
+							 {Mac, Status} <- Results]
+					      },
+					 #button{text="Ok", postback=close_submitstatus, delegate=?MODULE}
+					 ]
+				  }
+		     },
+    wf:insert_top("power-nodes", Panel).
+
 event({system, powernode, _Operation, _Profile}) ->
     wf:update("power-nodes", render_powernodes()),
     wf:flush();
@@ -179,7 +211,12 @@ event({node_toggle, Id, Mac}) ->
 	    wf:state(powernodes, NewDb)
     end;
 event({node_submit, Mac}) ->
-    power_server:submit_node(Mac);
+    render_submitstatus([Mac]);
+event(close_submitstatus) ->
+    wf:remove("submit-status");
+event({type, Id, Mac}) ->
+    Value = wf:q(Id),
+    power_server:set_param(Mac, type, Value);
 event(Event) ->
     ok.
 

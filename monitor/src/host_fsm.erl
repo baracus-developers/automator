@@ -168,9 +168,14 @@ discovery({baracus_state_change, register}, State) ->
 %------------------------------------------------------
 wait({command, {configure_power, Config}}, _From, State) ->
     Mac = State#state.mac,
-    baracus_driver:configure_power(Mac, Config),
-    handle_poweroff(Mac),
-    {reply, ok, dark, State};
+    try baracus_driver:configure_power(Mac, Config) of
+	ok ->
+	    handle_poweroff(Mac),
+	    {reply, ok, dark, State}
+    catch
+	throw:{badstatus, {{status, Status}, _, {data, Reason}}} ->
+	    {reply, {error, Reason}, wait, State}
+    end;
 wait({command, Command}, _From, State) ->
     illegal_command(Command, wait, State).
 

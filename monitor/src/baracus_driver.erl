@@ -44,7 +44,7 @@ configure_power(Mac, Config) ->
     util:os_cmd(Cmd),
 
     gen_event:notify(host_events, {baracus, power_configured, Mac}),
-    void.
+    ok.
 
 provision(Mac, Hostname, default) ->
     gen_event:notify(host_events, {policy, provision, Mac, Hostname}),
@@ -83,3 +83,6 @@ get_state(Mac) ->
 	{ok, Record} ->
 	    {ok, Record#bahost.state}
     end.
+
+get_bmctypes() ->
+    ['ipmi',  'virsh',  'bladecenter',  'ilo', 'drac', 'vmware', 'apc', 'wti',  'egenera', 'mainframe'].

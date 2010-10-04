@@ -16,7 +16,9 @@ os_cmd(Cmd, ExpectedStatus) ->
 	{ok, ExpectedStatus, Data} ->
 	    Data;
 	{ok, UnexpectedStatus, Data} ->
-	    throw({badstatus, {{status, UnexpectedStatus}, {cmd, Cmd}}})
+	    throw({badstatus, {{status, UnexpectedStatus},
+			       {cmd, Cmd},
+			       {data, Data}}})
     end.	
 
 cmd_receive(Port, Acc) ->

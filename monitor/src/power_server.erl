@@ -56,6 +56,8 @@ enum_nodes_i() ->
 
 update_powernode(Record, host, Value) when is_record(Record, powernode) ->
     Record#powernode{host=Value};
+update_powernode(Record, type, Value) when is_record(Record, powernode) ->
+    Record#powernode{type=Value};
 update_powernode(Record, bmcaddr, Value) when is_record(Record, powernode) ->
     Record#powernode{bmcaddr=Value};
 update_powernode(Record, username, Value) when is_record(Record, powernode) ->
@@ -122,15 +124,23 @@ handle_call({submit_node, Mac}, _From, State) ->
 		    [] ->
 			noexists;
 		    [Record] ->
-			mnesia:delete(powernodes, Mac, write),
-			host_fsm:configure_power(Mac, Record),
-			ok
+			case host_fsm:configure_power(Mac, Record) of
+			    ok ->
+				% FIXME: We can still roll back this transaction even if 
+				% baracus was updated and miss this delete.  We need to handle
+				% this case
+				mnesia:delete(powernodes, Mac, write);
+			    {error, Error} -> Error;
+			    Else -> Else
+			end
 		end
 	end,
     case mnesia:transaction(F) of
 	{atomic, ok} ->
 	    gen_event:notify(host_events, {system, powernode, submitted, Mac}),
 	    {reply, ok, State};
+	{atomic, Error} ->
+	    {reply, {error, Error}, State};
 	Error ->
 	    {reply, {error, Error}, State}
     end;
