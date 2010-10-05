@@ -218,3 +218,7 @@ a:hover, a:active {
 div.inplace_textbox.label {
     font-weight: normal;
 }
+
+.staging-controlbar {
+    text-align: right;
+}

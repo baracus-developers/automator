@@ -11,9 +11,9 @@ title() -> "Novell Cloud-Builder".
 
 toolbar() ->
     [
-     {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
+     {"/images/services.png", "/images/services-bw.png", "Services"},
      {"/images/globe.png", "/images/globe-bw.png", "Zones"},
-     {"/images/tickets-small.png", "/images/tickets-small-bw.png", "Staging"},
+     {"/images/inventory.png", "/images/inventory-bw.png", "Inventory"},
      {"/images/Warning.png", "/images/Warning-bw.png", "Alerts"},
      {"/images/Profile.png", "/images/Profile-bw.png", "Users"}
     ].
@@ -46,16 +46,16 @@ body() ->
 			  body=#gbar{tabs=toolbar(), postback=selected}}
 		  ]
 	   },
-     #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Inventory")}
+     #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Services")}
     ].
 
 render_mainpanel(Id) ->
     comet_server:flush_jobs(),
 
     case Id of
-	"Inventory" -> #inventorypanel{};
+	"Services" -> #panel{};
 	"Zones" -> #panel{};
-	"Staging" -> #stagingpanel{};
+	"Inventory" -> #inventorypanel{};
 	"Alerts" -> #panel{};
 	"Users" -> #users{}
     end.

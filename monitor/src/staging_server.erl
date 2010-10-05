@@ -9,7 +9,7 @@
 
 -export([add_rule/2, delete_rule/1, enum_rules/0]).
 -export([add_profile/1, delete_profile/1, enum_profiles/0]).
--export([enum_nodes/0, set_param/3, submit_node/1]).
+-export([enum_nodes/0, set_param/3, deploy_node/1, reject_node/1]).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). 
@@ -57,8 +57,11 @@ delete_profile(Name) ->
 set_param(Mac, Param, Value) ->
     gen_server:call(?MODULE, {set_param, Mac, Param, Value}).
 
-submit_node(Mac) ->
-    gen_server:call(?MODULE, {submit_node, Mac}).
+deploy_node(Mac) ->
+    gen_server:call(?MODULE, {deploy_node, Mac}).
+
+reject_node(Mac) ->
+    gen_server:call(?MODULE, {reject_node, Mac}).
 
 enum_profiles() ->
     gen_server:call(?MODULE, enum_profiles).
@@ -136,7 +139,7 @@ handle_call({set_param, Mac, Param, Value}, _From, State) ->
 	    {reply, {error, noexists}, State}
     end;
 
-handle_call({submit_node, Mac}, _From, State) ->
+handle_call({deploy_node, Mac}, _From, State) ->
     F = fun() ->
 		case mnesia:read(stagingnodes, Mac, write) of
 		    [] ->
@@ -162,7 +165,26 @@ handle_call({submit_node, Mac}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, ok} ->
-	    gen_event:notify(host_events, {system, stagingnode, submitted, Mac}),
+	    gen_event:notify(host_events, {system, stagingnode, deployed, Mac}),
+	    {reply, ok, State};
+	{atomic, Error} ->
+	    {reply, {error, Error}, State};
+	Error ->
+	    {reply, {error, Error}, State}
+    end;
+
+handle_call({reject_node, Mac}, _From, State) ->
+    F = fun() ->
+		case mnesia:read(stagingnodes, Mac, write) of
+		    [] ->
+			noexists;
+		    [Record] ->
+			mnesia:delete(stagingnodes, Mac, write)
+		end
+	end,
+    case mnesia:transaction(F) of
+	{atomic, ok} ->
+	    gen_event:notify(host_events, {system, stagingnode, rejected, Mac}),
 	    {reply, ok, State};
 	{atomic, Error} ->
 	    {reply, {error, Error}, State};

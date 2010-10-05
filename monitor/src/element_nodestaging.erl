@@ -12,6 +12,19 @@ coalesce(Value) ->
 
 -record(node, {mac, selected, data}).
 
+render_controlbar() ->
+    #panel{class="staging-controlbar",
+	   body=[
+		 #link{text="Apply Profile", delegate=?MODULE, postback=profile_apply},
+		 " ",
+		 #link{text="Apply Resolver", delegate=?MODULE, postback=resolver_apply},
+		 " ",
+		 #link{text="Deploy", delegate=?MODULE, postback=deploy_selected},
+		 " ",
+		 #link{text="Reject", delegate=?MODULE, postback=reject_selected}
+		]
+	  }.
+
 update_db([Record | T], Db) ->
     Node = case dict:find(Record#stagingnode.mac, Db) of
 	       {ok, Value} -> Value;
@@ -63,7 +76,9 @@ flatten_node(Node) ->
      coalesce(StagingNode#stagingnode.password),
      {password, Node#node.mac},
      [
-      #link{text="submit", delegate=?MODULE, postback={node_submit, Node#node.mac}}
+      #link{text="deploy", delegate=?MODULE, postback={node_deploy, Node#node.mac}},
+      " ",
+      #link{text="reject", delegate=?MODULE, postback={node_reject, Node#node.mac}}
      ]
     ].
 
@@ -154,9 +169,13 @@ render_element(R) ->
     comet_event_relay:add_handler(host_events, "stagingnodes",
 				  fun(Event) -> event(Event) end),   
 
-    Panel = #panel{ body=#panel{id="staging-nodes",
-				body=render_stagingnodes()
-			       }
+    Panel = #panel{ body=[
+			  #h1{},
+			  render_controlbar(),
+			  #panel{id="staging-nodes",
+				 body=render_stagingnodes()
+				}
+			 ]
 		  },
     element_panel:render_element(Panel).
 
@@ -169,25 +188,25 @@ update_selections(Value) ->
     wf:update("staging-nodes", render_stagingnodes()),
     ok.
 
-submit_node(Mac) ->
-    case staging_server:submit_node(Mac) of
+deploy_node(Mac) ->
+    case staging_server:deploy_node(Mac) of
 	ok -> "ok";
 	{error, Reason} -> "failed: " ++ Reason;
 	Else -> "failed"
     end.
 
-render_submitstatus(Macs) ->
+render_deploystatus(Macs) ->
 
-    Results = [{Mac, submit_node(Mac)} || Mac <- Macs],
+    Results = [{Mac, deploy_node(Mac)} || Mac <- Macs],
 
-    Panel = #lightbox{ id="submit-status",
+    Panel = #lightbox{ id="deploy-status",
 		       body=#panel{class="general-lightbox", 
 				   body=[
-					 #h2{ text="Submit status" },
+					 #h2{ text="Deploy status" },
 					 #list{ body=[#listitem{text=wf:f("~s (~s)", [Mac, Status])} ||
 							 {Mac, Status} <- Results]
 					      },
-					 #button{text="Ok", postback=close_submitstatus, delegate=?MODULE}
+					 #button{text="Ok", postback=close_deploystatus, delegate=?MODULE}
 					 ]
 				  }
 		     },
@@ -210,10 +229,18 @@ event({node_toggle, Id, Mac}) ->
 	    NewDb = dict:update(Mac, Node#node{selected=Value}, Db),
 	    wf:state(stagingnodes, NewDb)
     end;
-event({node_submit, Mac}) ->
-    render_submitstatus([Mac]);
-event(close_submitstatus) ->
-    wf:remove("submit-status");
+event({node_deploy, Mac}) ->
+    render_deploystatus([Mac]);
+event(deploy_selected) ->
+    Macs = [], % FIXME
+    render_deploystatus(Macs);
+event({node_reject, Mac}) ->
+    staging_server:reject_node(Mac);
+event(reject_selected) ->
+    Macs = [], % FIXME
+    [staging_server:reject_node(Mac) || Mac <- Macs];
+event(close_deploystatus) ->
+    wf:remove("deploy-status");
 event({type, Id, Mac}) ->
     Value = wf:q(Id),
     staging_server:set_param(Mac, type, Value);

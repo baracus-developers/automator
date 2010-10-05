@@ -1,4 +1,4 @@
--module(element_stagingpanel).
+-module(element_inventoryautomation).
 -export([reflect/0, render_element/1, event/1]).
 
 -include_lib("nitrogen/include/wf.inc").
@@ -7,7 +7,7 @@
 -include("staging.hrl").
 -include("wf_elements.hrl").
 
-reflect() -> record_info(fields, stagingpanel).
+reflect() -> record_info(fields, inventoryautomation).
 
 render_rule(StagingRule) ->
     #listitem{body=[
@@ -42,39 +42,28 @@ render_profiles() ->
 		]
 	 }.
 
-render_config() ->
-    #backsplash{ id="config-panel",
-	         body=[
-		       #h1{ text="Configuration"},
-		       #panel{ class="config-pane" ,
-			       body=[
-				     #label{text="Rules:"},
-				     #panel{ id="rules-list",
-					     body=render_rules()},
-				     #button{text="+",
-					     postback=add_rule, delegate=?MODULE}
-				     ]
-			     },
-		       #panel{ class="config-pane",
-			       body=[
-				     #label{text="Profiles:" },
-				     #panel{ id="profiles-list",
-					     body=render_profiles()
-					   },
-				     #button{text="+",
-					     postback=add_profile, delegate=?MODULE}
-				    ]
-			     }
-		      ]
-	       }.
-
-render_nodes() ->
-    #backsplash{ id="nodes-panel",
-	         body=[
-		       #h1{ text="Nodes"},
-		       #nodestaging{}
-		      ]
-	       }.
+render_body() ->
+    [
+     #panel{ class="config-pane" ,
+	     body=[
+		   #label{text="Rules:"},
+		   #panel{ id="rules-list",
+			   body=render_rules()},
+		   #button{text="+",
+			   postback=add_rule, delegate=?MODULE}
+		  ]
+	   },
+     #panel{ class="config-pane",
+	     body=[
+		   #label{text="Profiles:" },
+		   #panel{ id="profiles-list",
+			   body=render_profiles()
+			 },
+		   #button{text="+",
+			   postback=add_profile, delegate=?MODULE}
+		  ]
+	   }
+    ].
 
 handle_event({system, stagingrule, _Operation, _StagingRule}) ->
     wf:update("rules-list", render_rules()),
@@ -89,11 +78,8 @@ render_element(R) ->
     comet_event_relay:add_handler(host_events, "staging-panel",
 				  fun(Event) -> handle_event(Event) end),   
 
-    Panel = #panel{ body=#panel{id="staging-panel",
-				body=[
-				      render_config(),
-				      render_nodes()
-				     ]
+    Panel = #panel{ body=#panel{id="automation-panel",
+				body=render_body()
 			       }
 		  },
     element_panel:render_element(Panel).
@@ -128,7 +114,7 @@ event(add_rule) ->
 					 ]
 				  }
 		     },
-    wf:insert_top("staging-panel", Panel);
+    wf:insert_top("automation-panel", Panel);
 event(save_rule) ->
     Name = wf:q(name),
     XPath = wf:q(xpath),
@@ -178,7 +164,7 @@ event(add_profile) ->
 					 ]
 				  }
 		     },
-    wf:insert_top("staging-panel", Panel);
+    wf:insert_top("automation-panel", Panel);
 
 event(save_profile) ->
     Name = wf:q(profilename),

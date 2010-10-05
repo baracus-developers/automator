@@ -12,10 +12,13 @@
 -record(tabbedbacksplash, {?ELEMENT_BASE(element_tabbedbacksplash),
 			   panels, default, delegate, postback}).
 -record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data}).
--record(nodestaging, {?ELEMENT_BASE(element_nodestaging)}).
 
 
 % main panels
 -record(inventorypanel, {?ELEMENT_BASE(element_inventorypanel)}).
--record(stagingpanel, {?ELEMENT_BASE(element_stagingpanel)}).
 -record(users, {?ELEMENT_BASE(element_users)}).
+
+% inventory subpanel
+-record(activeinventory, {?ELEMENT_BASE(element_activeinventory)}).
+-record(inventoryautomation, {?ELEMENT_BASE(element_inventoryautomation)}).
+-record(nodestaging, {?ELEMENT_BASE(element_nodestaging)}).
