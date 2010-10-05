@@ -118,6 +118,11 @@ a:hover, a:active {
     line-height: 3em;
 }
 
+.tabcell {
+    position: float;
+    float: left;
+}
+
 .gtab {
     width: 50px;
     height: 35px;
@@ -128,10 +133,32 @@ a:hover, a:active {
     text-align: center;
 }
 
+.tab {
+    width: 80px;
+    height: 20px;
+    position: float;
+    float: left;
+    margin: 3px;
+    position: relative;
+    text-align: center;
+    background-color: #818181;
+}
+
+.tab_selected {
+    background-color: white;
+}
+
 .gtabtext {
     bottom: 0;
     color: #b8b8b7;
     line-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+} 
+
+.tabtext {
+    bottom: 0;
+    color: white;
     margin-top: 0;
     margin-bottom: 0;
 }
@@ -145,6 +172,10 @@ a:hover, a:active {
 .gtabtext_selected {
     background-color: #ACACAC;
     color: #fff;
+} 
+
+.tabtext_selected {
+    color: black;
 }
 
 .general-lightbox {
@@ -174,6 +205,8 @@ a:hover, a:active {
 }
 
 .outer-backsplash {
+    position: relative;
+    top: 23px;
     background-color: #fff
 }
 

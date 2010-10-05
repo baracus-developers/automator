@@ -6,7 +6,11 @@
 -record(gbar, {?ELEMENT_BASE(element_gbar),
 	       tabs, default, postback, delegate}).
 
+-record(tab, {?ELEMENT_BASE(element_tab), state=unselected, text, postback, delegate}).
+
 -record(backsplash, {?ELEMENT_BASE(element_backsplash), body}).
+-record(tabbedbacksplash, {?ELEMENT_BASE(element_tabbedbacksplash),
+			   panels, default, delegate, postback}).
 -record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data}).
 -record(nodestaging, {?ELEMENT_BASE(element_nodestaging)}).
 

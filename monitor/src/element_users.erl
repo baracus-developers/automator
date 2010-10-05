@@ -6,7 +6,13 @@
 
 reflect() -> record_info(fields, users).
 
+panels() ->
+    [
+     {"Users", #panel{body=#h1{text="Users"}}},
+     {"Groups", #panel{body=#h1{text="Groups"}}}
+    ].
+
 render_element(R) ->
-    Panel = #panel{ id=usersPanel, body=#h1 { text="Users!" }},
+    Panel = #panel{ id=usersPanel, body=#tabbedbacksplash{panels=panels()}},
     element_panel:render_element(Panel).
 
