@@ -188,6 +188,13 @@ update_selections(Value) ->
     wf:update("staging-nodes", render_stagingnodes()),
     ok.
 
+find_selected() ->
+    F = fun(_, Node) ->
+		Node#node.selected
+	end,
+    Db = dict:filter(F, wf:state(stagingnodes)),
+    [Mac || {Mac, _} <- dict:to_list(Db)].
+
 deploy_node(Mac) ->
     case staging_server:deploy_node(Mac) of
 	ok -> "ok";
@@ -232,12 +239,12 @@ event({node_toggle, Id, Mac}) ->
 event({node_deploy, Mac}) ->
     render_deploystatus([Mac]);
 event(deploy_selected) ->
-    Macs = [], % FIXME
+    Macs = find_selected(),
     render_deploystatus(Macs);
 event({node_reject, Mac}) ->
     staging_server:reject_node(Mac);
 event(reject_selected) ->
-    Macs = [], % FIXME
+    Macs = find_selected(),
     [staging_server:reject_node(Mac) || Mac <- Macs];
 event(close_deploystatus) ->
     wf:remove("deploy-status");
