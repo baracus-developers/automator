@@ -1,40 +1,29 @@
--module(element_admissionpanel).
+-module(element_stagingpanel).
 -export([reflect/0, render_element/1, event/1]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include_lib ("nitrogen/include/google_chart.hrl").
--include_lib("hostinfo.hrl").
--include_lib("staging.hrl").
--include_lib("rules.hrl").
+-include("hostinfo.hrl").
+-include("staging.hrl").
 -include("wf_elements.hrl").
 
-reflect() -> record_info(fields, admissionpanel).
+reflect() -> record_info(fields, stagingpanel).
 
-render_rule(HostRule) ->
+render_rule(StagingRule) ->
     #listitem{body=[
-		    HostRule#hostrule.name ++ " ",
-		    #link{ text="delete", delegate=?MODULE, postback={delete_rule, HostRule#hostrule.name}}
+		    StagingRule#stagingrule.name ++ " ",
+		    #link{ text="delete", delegate=?MODULE, postback={delete_rule, StagingRule#stagingrule.name}}
 		   ]
 	     }.
 
-render_rules_list() ->
-    {ok, HostRules} = rules_server:enum(),
+render_rules() ->
+    {ok, StagingRules} = rules_server:enum(),
 
     #list{ class="rules",
-	   body=[render_rule(HostRule) || HostRule <- HostRules]
+	   body=[render_rule(StagingRule) || StagingRule <- StagingRules]
 	 }.
 
-
-render_rules() ->
-    #backsplash{ id="rules-panel",
-	         body=[
-		       #h1{ text="Rules"},
-		       #panel{ id="rules-list", body=render_rules_list()},
-		       #button{text="+", postback=add_rule, delegate=?MODULE}
-		      ]
-	       }.
-
-render_stagingprofile(Profile) ->
+render_profile(Profile) ->
     #listitem{body=[
 		    Profile#stagingprofile.name ++ " ",
 		    #link{ text="delete",
@@ -43,53 +32,76 @@ render_stagingprofile(Profile) ->
 		   ]
 	     }.
 
-render_stagingprofiles() ->
+render_profiles() ->
     {ok, Profiles} = staging_server:enum_profiles(),
 
     #list{ class="profiles",
 	   body=[
-		 render_stagingprofile(Profile) ||
+		 render_profile(Profile) ||
 		    Profile <- Profiles
 		]
 	 }.
 
-
-render_staging() ->
-    #backsplash{ id="staging-panel",
+render_config() ->
+    #backsplash{ id="config-panel",
 	         body=[
-		       #h1{ text="Staging Configuration"},
-		       #label{text="Profiles"},
-		       #panel{ id="staging-profiles",
-			       body=render_stagingprofiles()
+		       #h1{ text="Configuration"},
+		       #panel{ class="config-pane" ,
+			       body=[
+				     #label{text="Rules:"},
+				     #panel{ id="rules-list",
+					     body=render_rules()},
+				     #button{text="+",
+					     postback=add_rule, delegate=?MODULE}
+				     ]
 			     },
-		       #button{text="+", postback=add_profile, delegate=?MODULE},
+		       #panel{ class="config-pane",
+			       body=[
+				     #label{text="Profiles:" },
+				     #panel{ id="profiles-list",
+					     body=render_profiles()
+					   },
+				     #button{text="+",
+					     postback=add_profile, delegate=?MODULE}
+				    ]
+			     }
+		      ]
+	       }.
+
+render_nodes() ->
+    #backsplash{ id="nodes-panel",
+	         body=[
+		       #h1{ text="Nodes"},
 		       #nodestaging{}
 		      ]
 	       }.
 
-handle_event({system, hostrule, _Operation, _HostRule}) ->
-    wf:update("rules-list", render_rules_list()),
+handle_event({system, stagingrule, _Operation, _StagingRule}) ->
+    wf:update("rules-list", render_rules()),
     wf:flush();
 handle_event({system, stagingprofile, _Operation, _Profile}) ->
-    wf:update("staging-profiles", render_stagingprofiles()),
+    wf:update("profiles-list", render_profiles()),
     wf:flush();
 handle_event(Event) ->
     ok.
 
 render_element(R) ->
-    comet_event_relay:add_handler(host_events, "admission-panel",
+    comet_event_relay:add_handler(host_events, "staging-panel",
 				  fun(Event) -> handle_event(Event) end),   
 
-    Panel = #panel{ body=#panel{id="admission-panel",
+    Panel = #panel{ body=#panel{id="staging-panel",
 				body=[
-				      render_rules(),
-				      render_staging()
+				      render_config(),
+				      render_nodes()
 				     ]
 			       }
 		  },
     element_panel:render_element(Panel).
 
-event(add_rule) ->
+event(add_rule) -> 
+    {ok, Profiles} = staging_server:enum_profiles(),
+    Actions = [none, accept, reject],
+
     Panel = #lightbox{ id="add-rule",
 		       body=#panel{class="general-lightbox", 
 				   body=[
@@ -99,15 +111,29 @@ event(add_rule) ->
 					 #textbox{id=name },
 					 #label{text="Rule:"},
 					 #textbox{id=xpath},
+					 #label{text="Profile:"},
+					 #dropdown{id=profile,
+						   value="none",
+						   options=[#option{text=Val#stagingprofile.name,
+								    value=Val#stagingprofile.name}
+							    || Val <- Profiles]
+						  },
+					 #label{text="Action:"},
+					 #dropdown{id=action,
+						   options=[#option{text=Val, value=Val}
+							    || Val <- Actions]
+						   },
 					 #button{text="Cancel", postback=cancel_rule, delegate=?MODULE},
 					 #button{text="Save", postback=save_rule, delegate=?MODULE}
 					 ]
 				  }
 		     },
-    wf:insert_top("admission-panel", Panel);
+    wf:insert_top("staging-panel", Panel);
 event(save_rule) ->
     Name = wf:q(name),
     XPath = wf:q(xpath),
+    Profile = wf:q(profile),
+    Action = wf:q(action),
     
     case rules_server:add(Name, XPath) of
 	ok ->
@@ -123,28 +149,20 @@ event({delete_rule, Name}) ->
     rules_server:delete(Name);
 
 event(add_profile) ->
-    {ok, Rules} = rules_server:enum(),
     Panel = #lightbox{ id="add-profile",
 		       body=#panel{class="general-lightbox", 
 				   body=[
-					 #h2{ text="Add new staging profile" },
+					 #h2{ text="Add new profile" },
 					 #flash{},
 					 #label{text="Profile name:"},
 					 #textbox{id=profilename },
-					 #label{text="Rule:"},
-					 #dropdown{id=rule,
-						   options=[
-							    #option{text=Rule#hostrule.name,
-								    value=Rule#hostrule.name} ||
-							       Rule <- Rules
-							   ]
-						  },
+					 #label{text="Pool:"},
+					 #textbox{id=pool },
 					 #label{text="Type:"},
 					 #dropdown{id=type,
-						   value="IPMI",
 						   options=[
-							    #option{text="IPMI",
-								    value="IPMI"}
+							    #option{text=Type, value=Type} ||
+							       Type <- baracus_driver:get_bmctypes()
 							   ]
 						  },
 					 #label{text="Host:"},
@@ -160,19 +178,19 @@ event(add_profile) ->
 					 ]
 				  }
 		     },
-    wf:insert_top("admission-panel", Panel);
+    wf:insert_top("staging-panel", Panel);
 
 event(save_profile) ->
     Name = wf:q(profilename),
-    Rule = wf:q(rule),
+    Pool = wf:q(pool),
     Type = wf:q(type),
     Host = wf:q(host),
     BMCAddr = wf:q(bmcaddr),
     Username = wf:q(username),
     Password = wf:q(password),
 
-    Profile = #stagingprofile{name=Name, rule=Rule, type=Type, host=Host, bmcaddr=BMCAddr,
-			    username=Username, password=Password}, 
+    Profile = #stagingprofile{name=Name, pool=Pool, type=Type, host=Host, bmcaddr=BMCAddr,
+			      username=Username, password=Password}, 
     
     case staging_server:add_profile(Profile) of
 	ok ->

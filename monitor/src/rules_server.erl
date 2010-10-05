@@ -1,7 +1,7 @@
 -module(rules_server).
 -behavior(gen_server).
 -include_lib("stdlib/include/qlc.hrl").
--include_lib("rules.hrl").
+-include_lib("staging.hrl").
 
 -export([init/1, start_link/0, handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
@@ -13,11 +13,11 @@ start_link() ->
 
 
 init(_Args) ->
-    ok = util:open_table(hostrules,
+    ok = util:open_table(stagingrules,
 			 [
-			  {record_name, hostrule},
+			  {record_name, stagingrule},
 			  {attributes,
-			   record_info(fields, hostrule)},
+			   record_info(fields, stagingrule)},
 			  {disc_copies, util:replicas()}
 			 ]),
 
@@ -34,10 +34,10 @@ enum() ->
 
 handle_call({add, Name, XPath}, _From, State) ->
     F = fun() ->
-		case mnesia:read(hostrules, Name, write) of
+		case mnesia:read(stagingrules, Name, write) of
 		    [] ->
-			Record = #hostrule{name=Name, xpath=XPath},
-			mnesia:write(hostrules, Record, write),
+			Record = #stagingrule{name=Name, xpath=XPath},
+			mnesia:write(stagingrules, Record, write),
 			{created, Record};
 		    [Record] ->
 			exists
@@ -45,7 +45,7 @@ handle_call({add, Name, XPath}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, {created, Record}} ->
-	    gen_event:notify(host_events, {system, hostrule, added, Record}),
+	    gen_event:notify(host_events, {system, stagingrule, added, Record}),
 	    {reply, ok, State};
 	{atomic, exists} ->
 	    {reply, {error, conflict}, State}
@@ -53,19 +53,19 @@ handle_call({add, Name, XPath}, _From, State) ->
 
 handle_call({delete, Name}, _From, State) ->
     F = fun() ->
-		mnesia:delete(hostrules, Name, write)
+		mnesia:delete(stagingrules, Name, write)
 	end,
     case mnesia:transaction(F) of
 	{atomic, ok} ->
-	    gen_event:notify(host_events, {system, hostrule, deleted, Name}),
+	    gen_event:notify(host_events, {system, stagingrule, deleted, Name}),
 	    {reply, ok, State};
 	Error ->
 	    {reply, {error, Error}, State}
     end;
 
 handle_call(enum, _From, State) ->
-    HostRules = util:atomic_query(qlc:q([X || X <- mnesia:table(hostrules)])),
-    {reply, {ok, HostRules}, State};
+    StagingRules = util:atomic_query(qlc:q([X || X <- mnesia:table(stagingrules)])),
+    {reply, {ok, StagingRules}, State};
 
 handle_call(_Request, _From, _State) ->
     throw(unexpected).
