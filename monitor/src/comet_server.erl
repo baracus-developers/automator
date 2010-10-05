@@ -9,10 +9,11 @@
     terminate/2, code_change/3
 ]).
 
--export([add_job/3, config/2, flush_jobs/0]).
+-export([add_job/3, push/1, pop/1, config/2, flush_jobs/0]).
 
 -record(job, {id, init, cleanup, state}).
--record(state, {pid, jobs = []}).
+-record(frame, {name, jobs = []}).
+-record(state, {pid, jobs = [], savedframes = []}).
 
 -record(client, {task, server}).
 
@@ -44,6 +45,20 @@ add_job(Init, Cleanup, State) ->
 add_job(Pid, Init, Cleanup, State) ->
     rpc(Pid, {add_job, Init, Cleanup, State}).
 
+push(Name) ->
+    Client = wf:state(comet_state),
+    push(Client#client.server).
+
+push(Pid, Name) ->
+    rpc(Pid, {push, Name}).
+
+pop(Name) ->
+    Client = wf:state(comet_state),
+    push(Client#client.server).
+
+pop(Pid, Name) ->
+    rpc(Pid, {pop, Name}).
+
 flush_jobs() ->
     Client = wf:state(comet_state),
     flush_jobs(Client#client.server).
@@ -70,6 +85,17 @@ handle_call({add_job, Init, Cleanup, JobState}, _From, State) ->
 	    {reply, {error, {exception, Type, Error}}, State}
     end;
     
+handle_call({push, Name}, _From, State) ->
+    NewFrame = #frame{name=Name, jobs=State#state.jobs},
+    SavedFrames = State#state.savedframes,
+
+    {reply, ok, State#state{jobs=[], savedframes=[NewFrame|SavedFrames]}};
+
+handle_call({pop, Name}, _From, State) ->
+    finish_jobs(State#state.jobs),
+    Frames = finish_frame(State#state.savedframes, Name),
+    {reply, ok, State#state{jobs = [], savedframes=Frames}};
+
 handle_call(flush_jobs, _From, State) ->
     {reply, ok, finish_all(State)};
 
@@ -78,6 +104,11 @@ handle_call(Request, _From, State) ->
 
 handle_cast(Message, State) ->
     {noreply, State}.
+
+finish_all(State) ->
+    finish_jobs(State#state.jobs),
+    [] = finish_frame(State#state.savedframes, undefined), 
+    State#state{jobs = [], savedframes=[]}.
 
 finish(Job) ->
     Cleanup = Job#job.cleanup,
@@ -88,9 +119,16 @@ finish(Job) ->
 				     [Type, Error, Job])
     end.
 
-finish_all(State) ->
-    [ finish(Job) || Job <- State#state.jobs],
-    State#state{jobs = []}.
+finish_frame([Frame | T], Stop) when Frame#frame.name =:= Stop ->
+    [Frame | T];
+finish_frame([Frame | T], Stop) ->
+    finish_jobs(Frame#frame.jobs),
+    finish_frame(T, Stop);
+finish_frame([], _) ->
+    [].
+
+finish_jobs(Jobs) ->
+    [ finish(Job) || Job <- Jobs].   
 
 handle_info({'EXIT', From, Type}, State) ->
     {stop, normal, finish_all(State)}.
@@ -104,16 +142,18 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 % unit tests
 %-------------------------------
 
+-record(teststate, {init, instance}).
+
 myinit(KnownPid, PresentedPid, State) ->
     if
 	KnownPid =/= PresentedPid ->
 	    throw({bad_pid, KnownPid, PresentedPid});
 	true -> ok
     end,
-    {ok, init_ok}.
+    {ok, State#teststate{init=ok}}.
 
-mycleanup(Pid, init_ok) ->
-    Pid ! complete,
+mycleanup(Pid, State=#teststate{init=ok}) ->
+    Pid ! State#teststate.instance,
     ok.
 
 job_test() ->
@@ -126,14 +166,43 @@ job_test() ->
 
     Cleanup = fun(State) -> mycleanup(S, State) end,
 
-    ok = add_job(Pid, Init, Cleanup, none),
-    ok = flush_jobs(Pid),
-    
+    ok = add_job(Pid, Init, Cleanup, #teststate{instance=alpha}),
+    ok = push(Pid, first),
+    ok = add_job(Pid, Init, Cleanup, #teststate{instance=bravo}),
+    ok = push(Pid, second),
+    ok = add_job(Pid, Init, Cleanup, #teststate{instance=charlie}),
+    ok = pop(Pid, first),
+
     receive
-	complete -> ok;
+	charlie -> ok;
 	Msg -> throw({unexpected_msg, Msg})
     after 1000 ->
 	    throw(timeout)
+    end,
+
+    receive
+	bravo -> ok;
+	Msg1 -> throw({unexpected_msg, Msg1})
+    after 1000 ->
+	    throw(timeout)
+    end,
+
+    % ensure the queue is actually empty
+    receive
+	Msg2 -> throw({unexpected_msg, Msg2})
+    after 0 ->
+	    ok
+    end,
+
+    ok = flush_jobs(Pid),
+
+    receive
+	alpha -> ok;
+	Msg3 -> throw({unexpected_msg, Msg3})
+    after 1000 ->
+	    throw(timeout)
     end.
+
+
 	      
 
