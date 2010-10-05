@@ -50,6 +50,8 @@ tests: application
 
 clean: 
 	@rm -f *~
+	@rm -f src/*~
+	@rm -f include/*~
 	@rm -rf obj
 	@rm -f *.dump
 
