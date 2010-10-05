@@ -27,8 +27,6 @@ init(Port) ->
             permanent, brutal_kill, worker, [bahost_mon]},
 	   {staging_server, {staging_server, start_link, []},
             permanent, brutal_kill, worker, [staging_server]},
-	   {rules_server, {rules_server, start_link, []},
-            permanent, brutal_kill, worker, [rules_server]},
 	   {puppetca_analyzer, {puppetca_driver, start_link, []},
             permanent, brutal_kill, worker, [puppetca_driver]},
 	   {puppetca_mon, {puppetca_mon, start_link, []},

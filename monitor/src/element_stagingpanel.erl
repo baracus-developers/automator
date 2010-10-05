@@ -17,7 +17,7 @@ render_rule(StagingRule) ->
 	     }.
 
 render_rules() ->
-    {ok, StagingRules} = rules_server:enum(),
+    {ok, StagingRules} = staging_server:enum_rules(),
 
     #list{ class="rules",
 	   body=[render_rule(StagingRule) || StagingRule <- StagingRules]
@@ -135,7 +135,7 @@ event(save_rule) ->
     Profile = wf:q(profile),
     Action = wf:q(action),
     
-    case rules_server:add(Name, XPath) of
+    case staging_server:add_rule(Name, XPath) of
 	ok ->
 	    wf:remove("add-rule");
 	{error, Error} ->
@@ -146,7 +146,7 @@ event(save_rule) ->
 event(cancel_rule) ->
     wf:remove("add-rule");
 event({delete_rule, Name}) ->
-    rules_server:delete(Name);
+    staging_server:delete_rule(Name);
 
 event(add_profile) ->
     Panel = #lightbox{ id="add-profile",

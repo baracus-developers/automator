@@ -7,14 +7,22 @@
 -export([init/1, start_link/0, handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
--export([add_profile/1, delete_profile/1, enum_profiles/0, enum_nodes/0,
-	 set_param/3, submit_node/1]).
+-export([add_rule/2, delete_rule/1, enum_rules/0]).
+-export([add_profile/1, delete_profile/1, enum_profiles/0]).
+-export([enum_nodes/0, set_param/3, submit_node/1]).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). 
 
 init(_Args) ->
     genevent_bridge:add_genserver_handler(host_events, self(), self()),
+    ok = util:open_table(stagingrules,
+			 [
+			  {record_name, stagingrule},
+			  {attributes,
+			   record_info(fields, stagingrule)},
+			  {disc_copies, util:replicas()}
+			 ]),
     ok = util:open_table(stagingprofiles,
 			 [
 			  {record_name, stagingprofile},
@@ -30,6 +38,15 @@ init(_Args) ->
 			  {disc_copies, util:replicas()}
 			 ]),
     {ok, null}.
+
+add_rule(Name, XPath) ->
+    gen_server:call(?MODULE, {add_rule, Name, XPath}).
+
+delete_rule(Name) ->
+    gen_server:call(?MODULE, {delete_rule, Name}).
+
+enum_rules() ->
+    gen_server:call(?MODULE, enum_rules).
 
 add_profile(Profile) when is_record(Profile, stagingprofile) ->
     gen_server:call(?MODULE, {add_profile, Profile}).
@@ -152,7 +169,42 @@ handle_call({submit_node, Mac}, _From, State) ->
 	Error ->
 	    {reply, {error, Error}, State}
     end;
-    
+
+handle_call({add_rule, Name, XPath}, _From, State) ->
+    F = fun() ->
+		case mnesia:read(stagingrules, Name, write) of
+		    [] ->
+			Record = #stagingrule{name=Name, xpath=XPath},
+			mnesia:write(stagingrules, Record, write),
+			{created, Record};
+		    [Record] ->
+			exists
+		end
+	end,
+    case mnesia:transaction(F) of
+	{atomic, {created, Record}} ->
+	    gen_event:notify(host_events, {system, stagingrule, added, Record}),
+	    {reply, ok, State};
+	{atomic, exists} ->
+	    {reply, {error, conflict}, State}
+    end;
+
+handle_call({delete_rule, Name}, _From, State) ->
+    F = fun() ->
+		mnesia:delete(stagingrules, Name, write)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, ok} ->
+	    gen_event:notify(host_events, {system, stagingrule, deleted, Name}),
+	    {reply, ok, State};
+	Error ->
+	    {reply, {error, Error}, State}
+    end;
+
+handle_call(enum_rules, _From, State) ->
+    StagingRules = util:atomic_query(qlc:q([X || X <- mnesia:table(stagingrules)])),
+    {reply, {ok, StagingRules}, State};
+  
 handle_call(_Request, _From, _State) ->
     throw(unexpected).
 
