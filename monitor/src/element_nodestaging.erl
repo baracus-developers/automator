@@ -38,7 +38,12 @@ get_stagingnodes() ->
     Db = wf:state_default(stagingnodes, dict:new()),
     {ok, Records} = staging_server:enum_nodes(),
 
-    UpdatedDb = update_db(Records, Db),
+    ValidSet = sets:from_list([Record#stagingnode.mac || Record <- Records]),
+    F = fun(Key, _) ->
+		sets:is_element(Key, ValidSet)
+	end,
+
+    UpdatedDb = update_db(Records, dict:filter(F, Db)),
 
     wf:state(stagingnodes, UpdatedDb),
     UpdatedDb.
