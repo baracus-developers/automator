@@ -1,5 +1,5 @@
 -module(element_nodestaging).
--export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
+-export([reflect/0, render_element/1, event/1]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("wf_elements.hrl").
@@ -54,7 +54,6 @@ flatten_node(Node) ->
     
     Id = [subst(X) || X <- Node#node.mac],
     SelectedId = "check-" ++ Id,
-    TypeId = "type-" ++ Id,
 
     [_, Zone] = string:tokens(atom_to_list(node()), "@"),
 
@@ -64,18 +63,14 @@ flatten_node(Node) ->
      {node_toggle, SelectedId, Node#node.mac},
      Zone,
      Node#node.mac,
-     TypeId,
      coalesce(StagingNode#stagingnode.type),
-     {type, TypeId, Node#node.mac},
      coalesce(StagingNode#stagingnode.host),
-     {host, Node#node.mac},
      coalesce(StagingNode#stagingnode.bmcaddr),
-     {bmcaddr, Node#node.mac},
      coalesce(StagingNode#stagingnode.username),
-     {username, Node#node.mac},
      coalesce(StagingNode#stagingnode.password),
-     {password, Node#node.mac},
      [
+      #link{text="edit", delegate=?MODULE, postback={node_edit, Node#node.mac}},
+      " ",
       #link{text="deploy", delegate=?MODULE, postback={node_deploy, Node#node.mac}},
       " ",
       #link{text="reject", delegate=?MODULE, postback={node_reject, Node#node.mac}}
@@ -94,17 +89,11 @@ render_stagingnodes() ->
 		   selected@postback,
 		   zone@text,
 		   mac@text,
-		   type@id,
-		   type@value,
-		   type@postback,
+		   type@text,
 		   host@text,
-		   host@tag,
 		   bmcaddr@text,
-		   bmcaddr@tag,
 		   username@text,
-		   username@tag,
 		   password@text,
-		   password@tag,
 		   actions@body
 		  ],
              header=[
@@ -131,36 +120,11 @@ render_stagingnodes() ->
 		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE}},
 		      #tablecell { id=zone },
 		      #tablecell { id=mac },
-		      #tablecell { body=#dropdown{id=type,
-						  options=lists:flatten([
-									 #option{text="undefined",
-										 value="-"
-										}
-									],
-									[
-									 #option{text=Type, value=Type} ||
-									    Type <- baracus_driver:get_bmctypes()
-									]
-								       ),
-						  delegate=?MODULE
-						 }
-				 },
-		      #tablecell { body=#inplace_textbox{id=host,
-							 delegate=?MODULE
-							}
-				 },
-		      #tablecell { body=#inplace_textbox{id=bmcaddr,
-							 delegate=?MODULE
-							}
-				 },
-		      #tablecell { body=#inplace_textbox{id=username,
-							 delegate=?MODULE
-							}
-				 },
-		      #tablecell { body=#inplace_textbox{id=password,
-							 delegate=?MODULE
-							}
-				 },
+		      #tablecell { id=type},
+		      #tablecell { id=host},
+		      #tablecell { id=bmcaddr},
+		      #tablecell { id=username},
+		      #tablecell { id=password},
 		      #tablecell { id=actions }
 		     ]
 	    }.
@@ -248,14 +212,8 @@ event(reject_selected) ->
     [staging_server:reject_node(Mac) || Mac <- Macs];
 event(close_deploystatus) ->
     wf:remove("deploy-status");
-event({type, Id, Mac}) ->
-    Value = wf:q(Id),
-    staging_server:set_param(Mac, type, Value);
 event(Event) ->
     ok.
 
-inplace_textbox_event({Type, Mac}, Value) ->
-    staging_server:set_param(Mac, Type, Value),
-    Value.
 
 
