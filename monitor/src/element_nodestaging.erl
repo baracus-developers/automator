@@ -269,13 +269,16 @@ event(nodes_select_none) ->
     update_selections(false),
     ok;
 event({node_toggle, Id, Mac}) ->
-    Value = wf:q(Id),
+    Value = case wf:q(Id) of
+		"on" -> true;
+		_ -> false
+	    end,
     Db = wf:state(stagingnodes),
-    case dict:find(Mac, Db) of
-	{ok, Node} ->
-	    NewDb = dict:update(Mac, Node#node{selected=Value}, Db),
-	    wf:state(stagingnodes, NewDb)
-    end;
+    F = fun(Node) ->
+		Node#node{selected=Value}
+	end,
+    NewDb = dict:update(Mac, F, Db),
+    wf:state(stagingnodes, NewDb);
 event({node_deploy, Mac}) ->
     render_deploystatus([Mac]);
 event({node_edit, Mac}) ->
