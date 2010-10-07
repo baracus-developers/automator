@@ -30,24 +30,26 @@ body() ->
 	    throw(comet_error)
     end,
 
-    [
-     #panel{ class="titlebar",
-	     body=[
-		   #panel{class="logo",
-			  body=#image{ image="/images/cloudbuilder-logo.png"}
-			 },
-		   #panel{class="salutation",
-			  body=[
-				"Welcome, " ++ wf:user() ++ " ",
-				#link{ body="Log Out", postback=logout}
-			       ]
-			 },
-		   #panel{class="toolbar",
-			  body=#gbar{tabs=toolbar(), postback=selected}}
-		  ]
-	   },
-     #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Services")}
-    ].
+    #panel{id="application",
+	   body=[
+		 #panel{ class="titlebar",
+			 body=[
+			       #panel{class="logo",
+				      body=#image{ image="/images/cloudbuilder-logo.png"}
+				     },
+			       #panel{class="salutation",
+				      body=[
+					    "Welcome, " ++ wf:user() ++ " ",
+					    #link{ body="Log Out", postback=logout}
+					   ]
+				     },
+			       #panel{class="toolbar",
+				      body=#gbar{tabs=toolbar(), postback=selected}}
+			      ]
+		       },
+		 #panel { id=mainPanel, class="mainpanel", body=render_mainpanel("Services")}
+		]
+	  }.
 
 render_mainpanel(Id) ->
     comet_server:flush_jobs(),

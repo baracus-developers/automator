@@ -13,6 +13,7 @@
 			   panels, default, delegate, postback}).
 -record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data}).
 
+-record(dialog, {?ELEMENT_BASE(element_dialog), title, body}).
 
 % main panels
 -record(inventorypanel, {?ELEMENT_BASE(element_inventorypanel)}).

@@ -15,9 +15,9 @@ coalesce(Value) ->
 render_controlbar() ->
     #panel{class="staging-controlbar",
 	   body=[
-		 #link{text="Apply Profile", delegate=?MODULE, postback=profile_apply},
+		 #link{text="Edit", delegate=?MODULE, postback=edit_selected},
 		 " ",
-		 #link{text="Apply Resolver", delegate=?MODULE, postback=resolver_apply},
+		 #link{text="Resolve", delegate=?MODULE, postback=resolve_selected},
 		 " ",
 		 #link{text="Deploy", delegate=?MODULE, postback=deploy_selected},
 		 " ",
@@ -188,6 +188,21 @@ render_deploystatus(Macs) ->
 		     },
     wf:insert_top("staging-nodes", Panel).
 
+render_edit(Mac) ->
+
+    Panel = #dialog{ id="edit-node",
+		     title=wf:f("Edit ~s", [Mac]),
+		     body=[
+			   #label{text="Pool:"},
+			   
+			   #button{text="Cancel",
+				   postback=node_cancel_edit, delegate=?MODULE},
+			   #button{text="Save",
+				   postback=node_save, delegate=?MODULE}
+			  ]
+		   },
+    wf:insert_top("application", Panel).
+
 event({system, stagingnode, _Operation, _Profile}) ->
     wf:update("staging-nodes", render_stagingnodes()),
     wf:flush();
@@ -207,6 +222,12 @@ event({node_toggle, Id, Mac}) ->
     end;
 event({node_deploy, Mac}) ->
     render_deploystatus([Mac]);
+event({node_edit, Mac}) ->
+    render_edit(Mac);
+event(node_cancel_edit) ->
+    wf:remove("edit-node");
+event(node_save) ->
+    wf:remove("edit-node");
 event(deploy_selected) ->
     Macs = find_selected(),
     render_deploystatus(Macs);

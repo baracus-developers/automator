@@ -222,3 +222,44 @@ div.inplace_textbox.label {
 .staging-controlbar {
     text-align: right;
 }
+
+.application {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.dialog-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.7;
+    z-index: 98;
+}
+
+.outer-dialog {
+    background-color: white;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 700px;
+    height: 500px;
+    margin-left: -350px;
+    z-index: 99;
+}
+
+.inner-dialog {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #e6e6e4;
+    margin: 1em;
+    margin-top: 3em;
+    padding: 1em;
+}
