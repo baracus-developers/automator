@@ -92,18 +92,18 @@ render_stagingnodes() ->
     #cbtable{class="nodes",
 	     data=Nodes,
 	     map= [
-		   selected@id,
-		   selected@checked,
-		   selected@postback,
-		   zone@text,
-		   mac@text,
-		   pool@text,
-		   type@text,
-		   host@text,
-		   bmcaddr@text,
-		   username@text,
-		   password@text,
-		   actions@body
+		   sn_selected@id,
+		   sn_selected@checked,
+		   sn_selected@postback,
+		   sn_zone@text,
+		   sn_mac@text,
+		   sn_pool@text,
+		   sn_type@text,
+		   sn_host@text,
+		   sn_bmcaddr@text,
+		   sn_username@text,
+		   sn_password@text,
+		   sn_actions@body
 		  ],
              header=[
 		     #tableheader{body=[
@@ -127,16 +127,16 @@ render_stagingnodes() ->
 		     #tableheader{text="Actions"}
 		    ],
 	     rowspec=[
-		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE}},
-		      #tablecell { id=zone },
-		      #tablecell { id=mac },
-		      #tablecell { id=pool },
-		      #tablecell { id=type},
-		      #tablecell { id=host},
-		      #tablecell { id=bmcaddr},
-		      #tablecell { id=username},
-		      #tablecell { id=password},
-		      #tablecell { id=actions }
+		      #tablecell { body=#checkbox{id=sn_selected, delegate=?MODULE}},
+		      #tablecell { id=sn_zone },
+		      #tablecell { id=sn_mac },
+		      #tablecell { id=sn_pool },
+		      #tablecell { id=sn_type},
+		      #tablecell { id=sn_host},
+		      #tablecell { id=sn_bmcaddr},
+		      #tablecell { id=sn_username},
+		      #tablecell { id=sn_password},
+		      #tablecell { id=sn_actions }
 		     ]
 	    }.
 
@@ -198,16 +198,24 @@ render_edititem(Id, Label) ->
     #panel{ class="edititem",
 	    body=[
 		  #label{class="edititem-label", text=wf:f("~s: ", [Label])},
-		  #inplace_textbox{id=Id,
-				   class="edititem-input",
-				   delegate=?MODULE,
-				   text="undefined"}
+		  #textbox{id=Id,
+			   class="edititem-input",
+			   delegate=?MODULE}
 		 ]
 	  }.
 
 render_edit(Macs) ->
 
     BmcTypes = [undefined | baracus_driver:get_bmctypes()],
+
+    PoolId = wf:temp_id(),
+    HostId = wf:temp_id(),
+    TypeId = wf:temp_id(),
+    BmcId  = wf:temp_id(),
+    UserId = wf:temp_id(),
+    PassId = wf:temp_id(),
+
+    Controls = [PoolId, HostId, TypeId, BmcId, UserId, PassId],
 
     Table = #cbtable{class="affected-nodes",
 		     data=[[Mac] || Mac <- Macs],
@@ -229,12 +237,12 @@ render_edit(Macs) ->
 			   Table,
 			   #panel{class="edit-form",
 				  body=[
-					render_edititem(pool, "Pool"), 
-					render_edititem(host, "Host"), 
+					render_edititem(PoolId, "Pool"), 
+					render_edititem(HostId, "Host"), 
 					#panel{class="edititem",
 					       body=[
 						     #label{class="edititem-label", text="Type:"},
-						     #dropdown{id=type,
+						     #dropdown{id=TypeId,
 							       class="edititem-input",
 							       options=[#option{text=Type, value=Type} ||
 									   Type <- BmcTypes
@@ -242,9 +250,9 @@ render_edit(Macs) ->
 							      }
 						    ]
 					      },
-					render_edititem(bmcaddr, "BMC Address"), 
-					render_edititem(username, "Username"), 
-					render_edititem(password, "Password")
+					render_edititem(BmcId, "BMC Address"), 
+					render_edititem(UserId, "Username"), 
+					render_edititem(PassId, "Password")
 				       ]
 				 },
 			   #panel{class="edit-controls",
@@ -252,7 +260,7 @@ render_edit(Macs) ->
 					#button{text="Cancel",
 						postback=nodes_edit_cancel, delegate=?MODULE},
 					#button{text="Save",
-						postback={nodes_edit_save, Macs}, delegate=?MODULE}
+						postback={nodes_edit_save, Macs, Controls}, delegate=?MODULE}
 				       ]
 				 }
 			  ]
@@ -288,12 +296,14 @@ event(edit_selected) ->
     render_edit(Macs);
 event(nodes_edit_cancel) ->
     wf:remove("edit-nodes");
-event({nodes_edit_save, Macs}) ->
+event({nodes_edit_save, Macs, Controls}) ->
     Fields = [pool, host, type, bmcaddr, username, password],
-    Values = [wf:q(Field) || Field <- Fields],
-    Params = lists:zip(Fields, Values),
+    Params = lists:zip(Fields, Controls),
+
+    Values = [{Param, wf:q(Control)} || {Param, Control} <- Params],
+
     [[staging_server:set_param(Mac, Param, Value) 
-      || {Param, Value} <- Params, Value =/= undefined] || Mac <- Macs],
+      || {Param, Value} <- Values, Value =/= undefined] || Mac <- Macs],
 
     wf:remove("edit-nodes");
 event(deploy_selected) ->

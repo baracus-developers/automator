@@ -75,6 +75,8 @@ enum_profiles_i() ->
 enum_nodes_i() ->
     util:atomic_query(qlc:q([X || X <- mnesia:table(stagingnodes)])).
 
+update_stagingnode(Record, pool, Value) when is_record(Record, stagingnode) ->
+    Record#stagingnode{pool=Value};
 update_stagingnode(Record, host, Value) when is_record(Record, stagingnode) ->
     Record#stagingnode{host=Value};
 update_stagingnode(Record, type, Value) when is_record(Record, stagingnode) ->
