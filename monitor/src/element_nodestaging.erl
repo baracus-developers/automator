@@ -1,5 +1,5 @@
 -module(element_nodestaging).
--export([reflect/0, render_element/1, event/1]).
+-export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("wf_elements.hrl").
@@ -19,9 +19,10 @@ render_controlbar() ->
 		 " ",
 		 #link{text="Resolve", delegate=?MODULE, postback=resolve_selected},
 		 " ",
-		 #link{text="Deploy", delegate=?MODULE, postback=deploy_selected},
-		 " ",
-		 #link{text="Reject", delegate=?MODULE, postback=reject_selected}
+		 #link{text="Deploy", delegate=?MODULE, postback=deploy_selected}
+% NOTYET						
+%		 " ",
+%		 #link{text="Reject", delegate=?MODULE, postback=reject_selected}
 		]
 	  }.
 
@@ -68,6 +69,7 @@ flatten_node(Node) ->
      {node_toggle, SelectedId, Node#node.mac},
      Zone,
      Node#node.mac,
+     coalesce(StagingNode#stagingnode.pool),
      coalesce(StagingNode#stagingnode.type),
      coalesce(StagingNode#stagingnode.host),
      coalesce(StagingNode#stagingnode.bmcaddr),
@@ -76,9 +78,10 @@ flatten_node(Node) ->
      [
       #link{text="edit", delegate=?MODULE, postback={node_edit, Node#node.mac}},
       " ",
-      #link{text="deploy", delegate=?MODULE, postback={node_deploy, Node#node.mac}},
-      " ",
-      #link{text="reject", delegate=?MODULE, postback={node_reject, Node#node.mac}}
+      #link{text="deploy", delegate=?MODULE, postback={node_deploy, Node#node.mac}}
+% NOTYET
+%      " ",
+%      #link{text="reject", delegate=?MODULE, postback={node_reject, Node#node.mac}}
      ]
     ].
 
@@ -94,6 +97,7 @@ render_stagingnodes() ->
 		   selected@postback,
 		   zone@text,
 		   mac@text,
+		   pool@text,
 		   type@text,
 		   host@text,
 		   bmcaddr@text,
@@ -114,6 +118,7 @@ render_stagingnodes() ->
 				 },
 		     #tableheader{text="Zone"},
 		     #tableheader{text="MAC"},
+		     #tableheader{text="Pool"},
 		     #tableheader{text="Type"},
 		     #tableheader{text="Host"},
 		     #tableheader{text="BMC Address"},
@@ -125,6 +130,7 @@ render_stagingnodes() ->
 		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE}},
 		      #tablecell { id=zone },
 		      #tablecell { id=mac },
+		      #tablecell { id=pool },
 		      #tablecell { id=type},
 		      #tablecell { id=host},
 		      #tablecell { id=bmcaddr},
@@ -188,17 +194,67 @@ render_deploystatus(Macs) ->
 		     },
     wf:insert_top("staging-nodes", Panel).
 
-render_edit(Mac) ->
+render_edititem(Id, Label) ->
+    #panel{ class="edititem",
+	    body=[
+		  #label{class="edititem-label", text=wf:f("~s: ", [Label])},
+		  #inplace_textbox{id=Id,
+				   class="edititem-input",
+				   delegate=?MODULE,
+				   text="undefined"}
+		 ]
+	  }.
 
-    Panel = #dialog{ id="edit-node",
-		     title=wf:f("Edit ~s", [Mac]),
+render_edit(Macs) ->
+
+    BmcTypes = [undefined | baracus_driver:get_bmctypes()],
+
+    Table = #cbtable{class="affected-nodes",
+		     data=[[Mac] || Mac <- Macs],
+		     map= [
+			   mac@text
+			  ],
+		     header=[
+			     #tableheader{text=wf:f("Affected Nodes (~p)",
+						    [length(Macs)])}
+			    ],
+		     rowspec=[
+			      #tablecell { id=mac }
+			     ]
+		    },
+
+    Panel = #dialog{ id="edit-nodes",
+		     title="Nodes: Group Edit",
 		     body=[
-			   #label{text="Pool:"},
-			   
-			   #button{text="Cancel",
-				   postback=node_cancel_edit, delegate=?MODULE},
-			   #button{text="Save",
-				   postback=node_save, delegate=?MODULE}
+			   Table,
+			   #panel{class="edit-form",
+				  body=[
+					render_edititem(pool, "Pool"), 
+					render_edititem(host, "Host"), 
+					#panel{class="edititem",
+					       body=[
+						     #label{class="edititem-label", text="Type:"},
+						     #dropdown{id=type,
+							       class="edititem-input",
+							       options=[#option{text=Type, value=Type} ||
+									   Type <- BmcTypes
+								       ]
+							      }
+						    ]
+					      },
+					render_edititem(bmcaddr, "BMC Address"), 
+					render_edititem(username, "Username"), 
+					render_edititem(password, "Password")
+				       ]
+				 },
+			   #panel{class="edit-controls",
+				  body=[
+					#button{text="Cancel",
+						postback=nodes_edit_cancel, delegate=?MODULE},
+					#button{text="Save",
+						postback={nodes_edit_save, Macs}, delegate=?MODULE}
+				       ]
+				 }
 			  ]
 		   },
     wf:insert_top("application", Panel).
@@ -223,11 +279,20 @@ event({node_toggle, Id, Mac}) ->
 event({node_deploy, Mac}) ->
     render_deploystatus([Mac]);
 event({node_edit, Mac}) ->
-    render_edit(Mac);
-event(node_cancel_edit) ->
-    wf:remove("edit-node");
-event(node_save) ->
-    wf:remove("edit-node");
+    render_edit([Mac]);
+event(edit_selected) ->
+    Macs = find_selected(),
+    render_edit(Macs);
+event(nodes_edit_cancel) ->
+    wf:remove("edit-nodes");
+event({nodes_edit_save, Macs}) ->
+    Fields = [pool, host, type, bmcaddr, username, password],
+    Values = [wf:q(Field) || Field <- Fields],
+    Params = lists:zip(Fields, Values),
+    [[staging_server:set_param(Mac, Param, Value) 
+      || {Param, Value} <- Params, Value =/= undefined] || Mac <- Macs],
+
+    wf:remove("edit-nodes");
 event(deploy_selected) ->
     Macs = find_selected(),
     render_deploystatus(Macs);
@@ -241,5 +306,5 @@ event(close_deploystatus) ->
 event(Event) ->
     ok.
 
-
-
+inplace_textbox_event(_, Val) ->
+    Val.
