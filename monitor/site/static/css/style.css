@@ -284,6 +284,7 @@ div.inplace_textbox.label {
 
 .edititem-label {
     float: left;
+    width: 100px;
 }
 
 .inplace_textbox.view.label {
