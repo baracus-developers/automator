@@ -11,7 +11,7 @@
   {crypto, "2.0.1"},
   {public_key, "0.8"},
   {eopenid, "0.1.0"},
-  {yaws_security, "0.1.1"},
+  {yaws_security, "0.1"},
   {nprocreg, "0.1"},
   {simple_bridge, "1.0"},
   {nitrogen, "2.0.1"},
