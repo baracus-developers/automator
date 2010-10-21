@@ -7,6 +7,8 @@ main() -> #template { file="./monitor/site/templates/bare.html" }.
 title() -> "CloudBuilder: Authentication Required".
 
 layout() ->
+    ClaimedId = wf:cookie("openid.claimed_id"),
+
     [
      #panel{ class="login-logo",
 	     body=#image{image="/images/cloudbuilder-logo.png"}},
@@ -15,7 +17,8 @@ layout() ->
 		    #image { class="openid-logo",
 			     image="http://openid.net/images/login-bg.gif"},
 		    #textbox {class="login-input",
-			      id=claimed_id},
+			      id=claimed_id,
+			      text=ClaimedId},
 		    #button { class="login-button",
 			      id=button, text="Login", postback=click}
 		   ]
@@ -30,5 +33,8 @@ body() ->
 	
 event(click) ->
     ClaimedId = wf:q(claimed_id),
+
+    wf:cookie("openid.claimed_id", ClaimedId),
+
     Url = wf:f("/openid/submit?openid.claimed_id=~s", [ClaimedId]),
     wf:redirect(Url).
