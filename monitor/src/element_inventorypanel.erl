@@ -10,7 +10,9 @@ panels() ->
     [
      {"Deployed",   #activeinventory{}},
      {"Staging",    #nodestaging{}},
-     {"Automation", #inventoryautomation{}}
+     {"Automation", #inventoryautomation{}},
+     {"Profiles",   #inventoryprofiles{}},
+     {"Resolvers",  #inventoryresolvers{}}
     ].
 
 render_element(R) ->

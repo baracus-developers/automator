@@ -1,0 +1,57 @@
+#!/bin/bash
+
+errorlog=$(mktemp)
+if [ $? -ne 0 ]; then
+    echo "$0: Can't create temp errorlog, exiting." >&2
+    exit -1
+fi
+
+cleanup() {
+    rm -f $errorlog
+}
+
+handle_terminate() {
+    echo "(received signal)
+
+Interrupted, cleaning up." >&2
+    cleanup
+    exit 255
+}
+
+error() {
+    echo "$1: `cat $errorlog`"
+    cleanup
+    exit -1
+}
+
+trap handle_terminate 1 2 3 15
+
+process_document() {
+    # read the xml document from stdin
+    while read i
+    do config+="$i"
+    done
+
+    config=`echo $config | xml ed -s "//PowerConfiguration" -t elem -n "$tempelem" -v "$device" -P | sed -e "s/&lt;/</
+g;s/&gt;/>/g" 2> $errorlog`
+if [ "$?" != "0" ]; then
+    error "xml ed /Machine/Context/$tempelem"
+fi
+    # output the xml back to stdout
+    echo $config | xml fo
+    
+    # we are done
+    cleanup
+    exit 0
+}
+
+case "$1" in
+    test)
+	cleanup
+	exit 0
+	;;
+    *)
+	process_document
+	;;
+esac
+

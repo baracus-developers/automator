@@ -4,8 +4,11 @@
 init(_Args) ->
     {ok, []}.
 
+% special case some events so we dont get that huge XML on the log/console
+handle_event({Principal, stagingnode, updated, {Mac, _, _}}, State) ->
+    error_logger:info_msg("Event: ~p node updated by ~p~n", [Mac, Principal]),
+    {ok, State};
 handle_event({system, discovery, {Mac, _Inventory}}, State) ->
-    % special case the discovery event so we dont get that huge XML on the log/console
     error_logger:info_msg("Event: {system, discovery, ~p}~n", [Mac]),
     {ok, State};
 handle_event(Event, State) ->

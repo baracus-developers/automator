@@ -82,6 +82,10 @@ a:hover, a:active {
     width: 100%;
 }
 
+.profiles-table {
+    width: 100%;
+}
+
 .gbar {
     position: absolute;
     border: 0px;
@@ -93,14 +97,13 @@ a:hover, a:active {
     color: #fff;
     font-size: 11px;
     text-align: center;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 .tablecell {
     padding-left: 5px;
     padding-right: 5px;
-}
-
-.oddrow {
     background-color: #fff;
 }
 
@@ -271,7 +274,7 @@ div.inplace_textbox.label {
     padding: 0.5em;
 }
 
-.edit-controls {
+.dialog-controls {
     position: absolute;
     bottom: 0;
     right: 0;
@@ -291,4 +294,14 @@ div.inplace_textbox.label {
     font-weight: normal;
 }
 
+.rule-cell {
+    width: 100px;
+}
+
+.rule-action {
+    width: 50px;
+
+.addrule-button {
+    margin-top: 1em;
+}
 

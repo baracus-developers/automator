@@ -1,6 +1,8 @@
 -module(util).
 -export([os_cmd_format/2, os_cmd/2, os_cmd/1]).
--export([open_table/2, replicas/0, atomic_query/1]).
+-export([open_table/2, replicas/0, atomic_query/1, render_edititem/2]).
+
+-include_lib("nitrogen/include/wf.inc").
 
 os_cmd_format(CmdFormat, Params) ->
     EncodedCmd = io_lib:format(CmdFormat, Params),    
@@ -43,3 +45,15 @@ atomic_query(Q) ->
     F = fun() -> qlc:e(Q) end,
     {atomic, Val} = mnesia:transaction(F),
     Val.
+
+render_edititem(Id, Label) ->
+    #panel{ class="edititem",
+	    body=[
+		  #label{class="edititem-label", text=wf:f("~s: ", [Label])},
+		  #textbox{id=Id,
+			   class="edititem-input",
+			   delegate=?MODULE}
+		 ]
+	  }.
+
+

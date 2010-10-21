@@ -1,0 +1,1296 @@
+<?xml version="1.0" standalone="yes" ?>
+<node id="_none_" claimed="true" class="system" handle="DMI:0001">
+ <description>Computer</description>
+ <product>VMware Virtual Platform</product>
+ <vendor>VMware, Inc.</vendor>
+ <version>None</version>
+ <serial>VMware-56 4d 78 5a e1 66 6d 3e-eb 54 47 07 27 43 0b fc</serial>
+ <width units="bits">32</width>
+ <configuration>
+  <setting id="administrator_password" value="enabled" />
+  <setting id="boot" value="oem-specific" />
+  <setting id="frontpanel_password" value="unknown" />
+  <setting id="keyboard_password" value="unknown" />
+  <setting id="power-on_password" value="disabled" />
+  <setting id="uuid" value="564D785A-E166-6D3E-EB54-470727430BFC" />
+  <setting id="mac" value="00:11:22:33:44:55" />
+ </configuration>
+ <capabilities>
+  <capability id="smbios-2.4" >SMBIOS version 2.4</capability>
+  <capability id="dmi-2.4" >DMI version 2.4</capability>
+ </capabilities>
+ <node id="powercontroller" claimed="true" class="controller">
+   <configuration>
+     <setting id="type" value="ipmi"/>
+     <setting id="login" value="homer"/>
+     <setting id="password" value="simpson"/>
+   </configuration>
+ </node>
+  <node id="core" claimed="true" class="bus" handle="DMI:0002">
+   <description>Motherboard</description>
+   <product>440BX Desktop Reference Platform</product>
+   <vendor>Intel Corporation</vendor>
+   <physid>0</physid>
+   <version>None</version>
+   <serial>None</serial>
+    <node id="firmware" claimed="true" class="memory" handle="">
+     <description>BIOS</description>
+     <vendor>Phoenix Technologies LTD</vendor>
+     <physid>0</physid>
+     <version>6.00 (12/31/2009)</version>
+     <size units="bytes">89376</size>
+     <capabilities>
+      <capability id="isa" >ISA bus</capability>
+      <capability id="pci" >PCI bus</capability>
+      <capability id="pcmcia" >PCMCIA/PCCard</capability>
+      <capability id="pnp" >Plug-and-Play</capability>
+      <capability id="apm" >Advanced Power Management</capability>
+      <capability id="upgrade" >BIOS EEPROM can be upgraded</capability>
+      <capability id="shadowing" >BIOS shadowing</capability>
+      <capability id="escd" >ESCD</capability>
+      <capability id="usb" >USB legacy emulation</capability>
+      <capability id="smartbattery" >Smart battery</capability>
+      <capability id="biosbootspecification" >BIOS boot specification</capability>
+     </capabilities>
+    </node>
+    <node id="cpu:0" claimed="true" class="processor" handle="DMI:0004">
+     <description>CPU</description>
+     <product>Intel(R) Core(TM) i7 CPU       M 620  @ 2.67GHz</product>
+     <vendor>Intel Corp.</vendor>
+     <physid>4</physid>
+     <businfo>cpu@0</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #0</slot>
+     <size units="Hz">2667000000</size>
+     <capacity units="Hz">4230196224</capacity>
+     <width units="bits">64</width>
+     <capabilities>
+      <capability id="fpu" >mathematical co-processor</capability>
+      <capability id="fpu_exception" >FPU exceptions reporting</capability>
+      <capability id="wp" />
+      <capability id="vme" >virtual mode extensions</capability>
+      <capability id="de" >debugging extensions</capability>
+      <capability id="pse" >page size extensions</capability>
+      <capability id="tsc" >time stamp counter</capability>
+      <capability id="msr" >model-specific registers</capability>
+      <capability id="pae" >4GB+ memory addressing (Physical Address Extension)</capability>
+      <capability id="mce" >machine check exceptions</capability>
+      <capability id="cx8" >compare and exchange 8-byte</capability>
+      <capability id="apic" >on-chip advanced programmable interrupt controller (APIC)</capability>
+      <capability id="sep" >fast system calls</capability>
+      <capability id="mtrr" >memory type range registers</capability>
+      <capability id="pge" >page global enable</capability>
+      <capability id="mca" >machine check architecture</capability>
+      <capability id="cmov" >conditional move instruction</capability>
+      <capability id="pat" >page attribute table</capability>
+      <capability id="pse36" >36-bit page size extensions</capability>
+      <capability id="clflush" />
+      <capability id="dts" >debug trace and EMON store MSRs</capability>
+      <capability id="acpi" >thermal control (ACPI)</capability>
+      <capability id="mmx" >multimedia extensions (MMX)</capability>
+      <capability id="fxsr" >fast floating point save/restore</capability>
+      <capability id="sse" >streaming SIMD extensions (SSE)</capability>
+      <capability id="sse2" >streaming SIMD extensions (SSE2)</capability>
+      <capability id="ss" >self-snoop</capability>
+      <capability id="nx" >no-execute bit (NX)</capability>
+      <capability id="rdtscp" />
+      <capability id="x86-64" >64bits extensions (x86-64)</capability>
+      <capability id="constant_tsc" />
+      <capability id="up" />
+      <capability id="arch_perfmon" />
+      <capability id="pebs" />
+      <capability id="bts" />
+      <capability id="pni" />
+      <capability id="ssse3" />
+      <capability id="cx16" />
+      <capability id="sse4_1" />
+      <capability id="sse4_2" />
+      <capability id="popcnt" />
+      <capability id="lahf_lm" />
+      <capability id="ida" />
+     </capabilities>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:001C">
+       <description>L1 cache</description>
+       <physid>1c</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:001D">
+       <description>L2 cache</description>
+       <physid>1d</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:1" claimed="true" class="processor" handle="DMI:0005">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>5</physid>
+     <businfo>cpu@1</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #1</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:001E">
+       <description>L1 cache</description>
+       <physid>1e</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:001F">
+       <description>L2 cache</description>
+       <physid>1f</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:2" claimed="true" class="processor" handle="DMI:0006">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>6</physid>
+     <businfo>cpu@2</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #2</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:0020">
+       <description>L1 cache</description>
+       <physid>20</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:0021">
+       <description>L2 cache</description>
+       <physid>21</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:3" claimed="true" class="processor" handle="DMI:0007">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>7</physid>
+     <businfo>cpu@3</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #3</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:0022">
+       <description>L1 cache</description>
+       <physid>22</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:0023">
+       <description>L2 cache</description>
+       <physid>23</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:4" claimed="true" class="processor" handle="DMI:0008">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>8</physid>
+     <businfo>cpu@4</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #4</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:0024">
+       <description>L1 cache</description>
+       <physid>24</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:0025">
+       <description>L2 cache</description>
+       <physid>25</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:5" claimed="true" class="processor" handle="DMI:0009">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>9</physid>
+     <businfo>cpu@5</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #5</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:0026">
+       <description>L1 cache</description>
+       <physid>26</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:0027">
+       <description>L2 cache</description>
+       <physid>27</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:6" claimed="true" class="processor" handle="DMI:000A">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>a</physid>
+     <businfo>cpu@6</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #6</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:0028">
+       <description>L1 cache</description>
+       <physid>28</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:0029">
+       <description>L2 cache</description>
+       <physid>29</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="cpu:7" claimed="true" class="processor" handle="DMI:000B">
+     <description>CPU</description>
+     <vendor>000000000000</vendor>
+     <physid>b</physid>
+     <businfo>cpu@7</businfo>
+     <version>6.5.5</version>
+     <serial>0002-0655-0000-0000-0000-0000</serial>
+     <slot>CPU socket #7</slot>
+     <size units="Hz">18446744072064584320</size>
+      <node id="cache:0" claimed="true" class="memory" handle="DMI:002A">
+       <description>L1 cache</description>
+       <physid>2a</physid>
+       <slot>L1 Cache</slot>
+       <size units="bytes">16384</size>
+       <capacity units="bytes">16384</capacity>
+       <capabilities>
+        <capability id="asynchronous" >Asynchronous</capability>
+        <capability id="internal" >Internal</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+      <node id="cache:1" disabled="true" claimed="true" class="memory" handle="DMI:002B">
+       <description>L2 cache</description>
+       <physid>2b</physid>
+       <slot>L2 Cache</slot>
+       <capacity units="bytes">524288</capacity>
+       <capabilities>
+        <capability id="external" >External</capability>
+        <capability id="write-back" >Write-back</capability>
+       </capabilities>
+      </node>
+    </node>
+    <node id="memory" claimed="true" class="memory" handle="DMI:003A">
+     <description>System Memory</description>
+     <physid>3a</physid>
+     <slot>System board or motherboard</slot>
+     <size units="bytes">536870912</size>
+      <node id="bank:0" claimed="true" class="memory" handle="DMI:003B">
+       <description>DIMM DRAM EDO</description>
+       <physid>0</physid>
+       <slot>RAM slot #0</slot>
+       <size units="bytes">536870912</size>
+       <width units="bits">32</width>
+      </node>
+      <node id="bank:1" claimed="true" class="memory" handle="DMI:003C">
+       <description>DIMM DRAM [empty]</description>
+       <physid>1</physid>
+       <slot>RAM slot #1</slot>
+      </node>
+      <node id="bank:2" claimed="true" class="memory" handle="DMI:003D">
+       <description>DIMM DRAM [empty]</description>
+       <physid>2</physid>
+       <slot>RAM slot #2</slot>
+      </node>
+      <node id="bank:3" claimed="true" class="memory" handle="DMI:003E">
+       <description>DIMM DRAM [empty]</description>
+       <physid>3</physid>
+       <slot>RAM slot #3</slot>
+      </node>
+      <node id="bank:4" claimed="true" class="memory" handle="DMI:003F">
+       <description>DIMM DRAM [empty]</description>
+       <physid>4</physid>
+       <slot>RAM slot #4</slot>
+      </node>
+      <node id="bank:5" claimed="true" class="memory" handle="DMI:0040">
+       <description>DIMM DRAM [empty]</description>
+       <physid>5</physid>
+       <slot>RAM slot #5</slot>
+      </node>
+      <node id="bank:6" claimed="true" class="memory" handle="DMI:0041">
+       <description>DIMM DRAM [empty]</description>
+       <physid>6</physid>
+       <slot>RAM slot #6</slot>
+      </node>
+      <node id="bank:7" claimed="true" class="memory" handle="DMI:0042">
+       <description>DIMM DRAM [empty]</description>
+       <physid>7</physid>
+       <slot>RAM slot #7</slot>
+      </node>
+      <node id="bank:8" claimed="true" class="memory" handle="DMI:0043">
+       <description>DIMM DRAM [empty]</description>
+       <physid>8</physid>
+       <slot>RAM slot #8</slot>
+      </node>
+      <node id="bank:9" claimed="true" class="memory" handle="DMI:0044">
+       <description>DIMM DRAM [empty]</description>
+       <physid>9</physid>
+       <slot>RAM slot #9</slot>
+      </node>
+      <node id="bank:10" claimed="true" class="memory" handle="DMI:0045">
+       <description>DIMM DRAM [empty]</description>
+       <physid>a</physid>
+       <slot>RAM slot #10</slot>
+      </node>
+      <node id="bank:11" claimed="true" class="memory" handle="DMI:0046">
+       <description>DIMM DRAM [empty]</description>
+       <physid>b</physid>
+       <slot>RAM slot #11</slot>
+      </node>
+      <node id="bank:12" claimed="true" class="memory" handle="DMI:0047">
+       <description>DIMM DRAM [empty]</description>
+       <physid>c</physid>
+       <slot>RAM slot #12</slot>
+      </node>
+      <node id="bank:13" claimed="true" class="memory" handle="DMI:0048">
+       <description>DIMM DRAM [empty]</description>
+       <physid>d</physid>
+       <slot>RAM slot #13</slot>
+      </node>
+      <node id="bank:14" claimed="true" class="memory" handle="DMI:0049">
+       <description>DIMM DRAM [empty]</description>
+       <physid>e</physid>
+       <slot>RAM slot #14</slot>
+      </node>
+    </node>
+    <node id="pci" claimed="true" class="bridge" handle="PCIBUS:0000:00">
+     <physid>100</physid>
+     <businfo>pci@0000:00:00.0</businfo>
+     <version>01</version>
+     <width units="bits">32</width>
+     <clock units="Hz">33000000</clock>
+     <configuration>
+      <setting id="driver" value="agpgart-intel" />
+      <setting id="module" value="intel_agp" />
+     </configuration>
+      <node id="pci:0" claimed="true" class="bridge" handle="PCIBUS:0000:01">
+       <physid>1</physid>
+       <businfo>pci@0000:00:01.0</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">66000000</clock>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="bus_master" >bus mastering</capability>
+       </capabilities>
+      </node>
+      <node id="isa" claimed="true" class="bridge" handle="PCI:0000:00:07.0">
+       <physid>7</physid>
+       <businfo>pci@0000:00:07.0</businfo>
+       <version>08</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="latency" value="0" />
+       </configuration>
+       <capabilities>
+        <capability id="isa" />
+        <capability id="bus_master" >bus mastering</capability>
+       </capabilities>
+      </node>
+      <node id="ide" claimed="true" class="storage" handle="PCI:0000:00:07.1">
+       <physid>7.1</physid>
+       <businfo>pci@0000:00:07.1</businfo>
+       <logicalname>scsi2</logicalname>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="ata_piix" />
+        <setting id="latency" value="64" />
+        <setting id="module" value="ata_piix" />
+       </configuration>
+       <capabilities>
+        <capability id="ide" />
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="emulated" >Emulated device</capability>
+       </capabilities>
+        <node id="cdrom" claimed="true" class="disk" handle="SCSI:02:00:00:00">
+         <description>SCSI CD-ROM</description>
+         <product>VMware IDE CDR10</product>
+         <vendor>NECVMWar</vendor>
+         <physid>0.0.0</physid>
+         <businfo>scsi@2:0.0.0</businfo>
+         <logicalname>/dev/cdrom</logicalname>
+         <logicalname>/dev/scd0</logicalname>
+         <logicalname>/dev/sr0</logicalname>
+         <dev>11d:0d</dev>
+         <version>1.00</version>
+         <serial>NECVMWarVMware IDE CDR101.00</serial>
+         <configuration>
+          <setting id="ansiversion" value="5" />
+          <setting id="status" value="open" />
+         </configuration>
+         <capabilities>
+          <capability id="removable" >support is removable</capability>
+          <capability id="audio" >Audio CD playback</capability>
+         </capabilities>
+        </node>
+      </node>
+      <node id="bridge" class="bridge" handle="PCI:0000:00:07.3">
+       <physid>7.3</physid>
+       <businfo>pci@0000:00:07.3</businfo>
+       <version>08</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="latency" value="0" />
+       </configuration>
+       <capabilities>
+        <capability id="bridge" />
+       </capabilities>
+      </node>
+      <node id="system" class="system" handle="PCI:0000:00:07.7">
+       <physid>7.7</physid>
+       <businfo>pci@0000:00:07.7</businfo>
+       <version>10</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="latency" value="64" />
+        <setting id="maxlatency" value="255" />
+        <setting id="mingnt" value="6" />
+       </configuration>
+      </node>
+      <node id="display" class="display" handle="PCI:0000:00:0f.0">
+       <physid>f</physid>
+       <businfo>pci@0000:00:0f.0</businfo>
+       <version>00</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="latency" value="64" />
+       </configuration>
+       <capabilities>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="scsi" claimed="true" class="storage" handle="SCSI:00">
+       <physid>10</physid>
+       <businfo>pci@0000:00:10.0</businfo>
+       <logicalname>scsi0</logicalname>
+       <version>01</version>
+       <width units="bits">64</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="mptspi" />
+        <setting id="latency" value="64" />
+        <setting id="maxlatency" value="255" />
+        <setting id="mingnt" value="6" />
+        <setting id="module" value="mptspi" />
+       </configuration>
+       <capabilities>
+        <capability id="scsi" />
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="scsi-host" >SCSI host adapter</capability>
+       </capabilities>
+        <node id="disk" claimed="true" class="disk" handle="SCSI:00:00:00:00">
+         <description>SCSI Disk</description>
+         <product>VMware Virtual S</product>
+         <vendor>VMware,</vendor>
+         <physid>0.0.0</physid>
+         <businfo>scsi@0:0.0.0</businfo>
+         <logicalname>/dev/sda</logicalname>
+         <dev>8d:0d</dev>
+         <version>1.0</version>
+         <size units="bytes">21474836480</size>
+         <configuration>
+          <setting id="ansiversion" value="2" />
+         </configuration>
+         <capabilities>
+          <capability id="7200rpm" >7200 rotations per minute</capability>
+          <capability id="partitioned" >Partitioned disk</capability>
+          <capability id="partitioned:dos" >MS-DOS partition table</capability>
+         </capabilities>
+          <node id="volume:0" claimed="true" class="volume" handle="">
+           <description>Linux swap / Solaris partition</description>
+           <physid>1</physid>
+           <businfo>scsi@0:0.0.0,1</businfo>
+           <logicalname>/dev/sda1</logicalname>
+           <dev>8d:1d</dev>
+           <capacity>773144064</capacity>
+           <capabilities>
+            <capability id="primary" >Primary partition</capability>
+            <capability id="nofs" >No filesystem</capability>
+           </capabilities>
+          </node>
+          <node id="volume:1" claimed="true" class="volume" handle="">
+           <description>Linux filesystem partition</description>
+           <physid>2</physid>
+           <businfo>scsi@0:0.0.0,2</businfo>
+           <logicalname>/dev/sda2</logicalname>
+           <dev>8d:2d</dev>
+           <capacity>20694804480</capacity>
+           <capabilities>
+            <capability id="primary" >Primary partition</capability>
+            <capability id="bootable" >Bootable partition (active)</capability>
+           </capabilities>
+          </node>
+        </node>
+      </node>
+      <node id="pci:1" claimed="true" class="bridge" handle="PCIBUS:0000:02">
+       <physid>11</physid>
+       <businfo>pci@0000:00:11.0</businfo>
+       <version>02</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+        <node id="usb:0" claimed="true" class="bus" handle="PCI:0000:02:00.0">
+         <physid>0</physid>
+         <businfo>pci@0000:02:00.0</businfo>
+         <version>00</version>
+         <width units="bits">32</width>
+         <clock units="Hz">33000000</clock>
+         <configuration>
+          <setting id="driver" value="uhci_hcd" />
+          <setting id="latency" value="64" />
+          <setting id="module" value="uhci_hcd" />
+         </configuration>
+         <capabilities>
+          <capability id="bus_master" >bus mastering</capability>
+         </capabilities>
+        </node>
+        <node id="network" claimed="true" class="network" handle="PCI:0000:02:01.0">
+         <description>Ethernet interface</description>
+         <physid>1</physid>
+         <businfo>pci@0000:02:01.0</businfo>
+         <logicalname>eth0</logicalname>
+         <version>01</version>
+         <serial>00:0c:29:43:0b:fc</serial>
+         <size>1000000000</size>
+         <capacity>1000000000</capacity>
+         <width units="bits">64</width>
+         <clock units="Hz">66000000</clock>
+         <configuration>
+          <setting id="autonegotiation" value="on" />
+          <setting id="broadcast" value="yes" />
+          <setting id="driver" value="e1000" />
+          <setting id="driverversion" value="7.3.20-k3-NAPI" />
+          <setting id="duplex" value="full" />
+          <setting id="firmware" value="N/A" />
+          <setting id="ip" value="10.20.30.119" />
+          <setting id="latency" value="0" />
+          <setting id="link" value="yes" />
+          <setting id="mingnt" value="255" />
+          <setting id="module" value="e1000" />
+          <setting id="multicast" value="yes" />
+          <setting id="port" value="twisted pair" />
+          <setting id="speed" value="1GB/s" />
+         </configuration>
+         <capabilities>
+          <capability id="pm" >Power Management</capability>
+          <capability id="pcix" >PCI-X</capability>
+          <capability id="bus_master" >bus mastering</capability>
+          <capability id="cap_list" >PCI capabilities listing</capability>
+          <capability id="ethernet" />
+          <capability id="physical" >Physical interface</capability>
+          <capability id="logical" >Logical interface</capability>
+          <capability id="tp" >twisted pair</capability>
+          <capability id="10bt" >10MB/s</capability>
+          <capability id="10bt-fd" >10MB/s (full duplex)</capability>
+          <capability id="100bt" >100MB/s</capability>
+          <capability id="100bt-fd" >100MB/s (full duplex)</capability>
+          <capability id="1000bt-fd" >1GB/s (full duplex)</capability>
+          <capability id="autonegotiation" >Auto-negotiation</capability>
+         </capabilities>
+        </node>
+        <node id="multimedia" class="multimedia" handle="PCI:0000:02:02.0">
+         <physid>2</physid>
+         <businfo>pci@0000:02:02.0</businfo>
+         <version>02</version>
+         <width units="bits">32</width>
+         <clock units="Hz">33000000</clock>
+         <configuration>
+          <setting id="latency" value="64" />
+          <setting id="maxlatency" value="255" />
+          <setting id="mingnt" value="6" />
+         </configuration>
+        </node>
+        <node id="usb:1" claimed="true" class="bus" handle="PCI:0000:02:03.0">
+         <physid>3</physid>
+         <businfo>pci@0000:02:03.0</businfo>
+         <version>00</version>
+         <width units="bits">32</width>
+         <clock units="Hz">33000000</clock>
+         <configuration>
+          <setting id="driver" value="ehci_hcd" />
+          <setting id="latency" value="64" />
+          <setting id="maxlatency" value="255" />
+          <setting id="mingnt" value="6" />
+          <setting id="module" value="ehci_hcd" />
+         </configuration>
+         <capabilities>
+          <capability id="bus_master" >bus mastering</capability>
+         </capabilities>
+        </node>
+      </node>
+      <node id="pci:2" claimed="true" class="bridge" handle="PCIBUS:0000:03">
+       <physid>15</physid>
+       <businfo>pci@0000:00:15.0</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:3" claimed="true" class="bridge" handle="PCIBUS:0000:04">
+       <physid>15.1</physid>
+       <businfo>pci@0000:00:15.1</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:4" claimed="true" class="bridge" handle="PCIBUS:0000:05">
+       <physid>15.2</physid>
+       <businfo>pci@0000:00:15.2</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:5" claimed="true" class="bridge" handle="PCIBUS:0000:06">
+       <physid>15.3</physid>
+       <businfo>pci@0000:00:15.3</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:6" claimed="true" class="bridge" handle="PCIBUS:0000:07">
+       <physid>15.4</physid>
+       <businfo>pci@0000:00:15.4</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:7" claimed="true" class="bridge" handle="PCIBUS:0000:08">
+       <physid>15.5</physid>
+       <businfo>pci@0000:00:15.5</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:8" claimed="true" class="bridge" handle="PCIBUS:0000:09">
+       <physid>15.6</physid>
+       <businfo>pci@0000:00:15.6</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:9" claimed="true" class="bridge" handle="PCIBUS:0000:0a">
+       <physid>15.7</physid>
+       <businfo>pci@0000:00:15.7</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:10" claimed="true" class="bridge" handle="PCIBUS:0000:0b">
+       <physid>16</physid>
+       <businfo>pci@0000:00:16.0</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:11" claimed="true" class="bridge" handle="PCIBUS:0000:0c">
+       <physid>16.1</physid>
+       <businfo>pci@0000:00:16.1</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:12" claimed="true" class="bridge" handle="PCIBUS:0000:0d">
+       <physid>16.2</physid>
+       <businfo>pci@0000:00:16.2</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:13" claimed="true" class="bridge" handle="PCIBUS:0000:0e">
+       <physid>16.3</physid>
+       <businfo>pci@0000:00:16.3</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:14" claimed="true" class="bridge" handle="PCIBUS:0000:0f">
+       <physid>16.4</physid>
+       <businfo>pci@0000:00:16.4</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:15" claimed="true" class="bridge" handle="PCIBUS:0000:10">
+       <physid>16.5</physid>
+       <businfo>pci@0000:00:16.5</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:16" claimed="true" class="bridge" handle="PCIBUS:0000:11">
+       <physid>16.6</physid>
+       <businfo>pci@0000:00:16.6</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:17" claimed="true" class="bridge" handle="PCIBUS:0000:12">
+       <physid>16.7</physid>
+       <businfo>pci@0000:00:16.7</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:18" claimed="true" class="bridge" handle="PCIBUS:0000:13">
+       <physid>17</physid>
+       <businfo>pci@0000:00:17.0</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:19" claimed="true" class="bridge" handle="PCIBUS:0000:14">
+       <physid>17.1</physid>
+       <businfo>pci@0000:00:17.1</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:20" claimed="true" class="bridge" handle="PCIBUS:0000:15">
+       <physid>17.2</physid>
+       <businfo>pci@0000:00:17.2</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:21" claimed="true" class="bridge" handle="PCIBUS:0000:16">
+       <physid>17.3</physid>
+       <businfo>pci@0000:00:17.3</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:22" claimed="true" class="bridge" handle="PCIBUS:0000:17">
+       <physid>17.4</physid>
+       <businfo>pci@0000:00:17.4</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:23" claimed="true" class="bridge" handle="PCIBUS:0000:18">
+       <physid>17.5</physid>
+       <businfo>pci@0000:00:17.5</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:24" claimed="true" class="bridge" handle="PCIBUS:0000:19">
+       <physid>17.6</physid>
+       <businfo>pci@0000:00:17.6</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:25" claimed="true" class="bridge" handle="PCIBUS:0000:1a">
+       <physid>17.7</physid>
+       <businfo>pci@0000:00:17.7</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:26" claimed="true" class="bridge" handle="PCIBUS:0000:1b">
+       <physid>18</physid>
+       <businfo>pci@0000:00:18.0</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:27" claimed="true" class="bridge" handle="PCIBUS:0000:1c">
+       <physid>18.1</physid>
+       <businfo>pci@0000:00:18.1</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:28" claimed="true" class="bridge" handle="PCIBUS:0000:1d">
+       <physid>18.2</physid>
+       <businfo>pci@0000:00:18.2</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:29" claimed="true" class="bridge" handle="PCIBUS:0000:1e">
+       <physid>18.3</physid>
+       <businfo>pci@0000:00:18.3</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:30" claimed="true" class="bridge" handle="PCIBUS:0000:1f">
+       <physid>18.4</physid>
+       <businfo>pci@0000:00:18.4</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:31" claimed="true" class="bridge" handle="PCIBUS:0000:20">
+       <physid>18.5</physid>
+       <businfo>pci@0000:00:18.5</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:32" claimed="true" class="bridge" handle="PCIBUS:0000:21">
+       <physid>18.6</physid>
+       <businfo>pci@0000:00:18.6</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+      <node id="pci:33" claimed="true" class="bridge" handle="PCIBUS:0000:22">
+       <physid>18.7</physid>
+       <businfo>pci@0000:00:18.7</businfo>
+       <version>01</version>
+       <width units="bits">32</width>
+       <clock units="Hz">33000000</clock>
+       <configuration>
+        <setting id="driver" value="pcieport-driver" />
+       </configuration>
+       <capabilities>
+        <capability id="pci" />
+        <capability id="pm" >Power Management</capability>
+        <capability id="pciexpress" >PCI Express</capability>
+        <capability id="msi" >Message Signalled Interrupts</capability>
+        <capability id="bus_master" >bus mastering</capability>
+        <capability id="cap_list" >PCI capabilities listing</capability>
+       </capabilities>
+      </node>
+    </node>
+  </node>
+</node>

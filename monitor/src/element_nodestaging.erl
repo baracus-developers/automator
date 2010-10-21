@@ -1,5 +1,6 @@
 -module(element_nodestaging).
 -export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
+-import(util, [render_edititem/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("wf_elements.hrl").
@@ -194,16 +195,6 @@ render_deploystatus(Macs) ->
 		     },
     wf:insert_top("staging-nodes", Panel).
 
-render_edititem(Id, Label) ->
-    #panel{ class="edititem",
-	    body=[
-		  #label{class="edititem-label", text=wf:f("~s: ", [Label])},
-		  #textbox{id=Id,
-			   class="edititem-input",
-			   delegate=?MODULE}
-		 ]
-	  }.
-
 render_edit(Macs) ->
 
     BmcTypes = [undefined | baracus_driver:get_bmctypes()],
@@ -255,7 +246,7 @@ render_edit(Macs) ->
 					render_edititem(PassId, "Password")
 				       ]
 				 },
-			   #panel{class="edit-controls",
+			   #panel{class="dialog-controls",
 				  body=[
 					#button{text="Cancel",
 						postback=nodes_edit_cancel, delegate=?MODULE},

@@ -22,4 +22,6 @@
 % inventory subpanel
 -record(activeinventory, {?ELEMENT_BASE(element_activeinventory)}).
 -record(inventoryautomation, {?ELEMENT_BASE(element_inventoryautomation)}).
+-record(inventoryprofiles, {?ELEMENT_BASE(element_inventoryprofiles)}).
+-record(inventoryresolvers, {?ELEMENT_BASE(element_inventoryresolvers)}).
 -record(nodestaging, {?ELEMENT_BASE(element_nodestaging)}).
