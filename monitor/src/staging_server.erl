@@ -293,7 +293,8 @@ handle_call({add_resolver, Name, SourceName}, _From, State) ->
 
     F = fun() ->
 		Q = qlc:q([X#resolver.version
-			   || X=#resolver{name=Name} <- mnesia:table(resolvers)]),
+			   || X <- mnesia:table(resolvers),
+			      X#resolver.name == Name]),
 		Versions = qlc:e(Q),
 
 		Max = fun(E, Acc) when E > Acc -> E;
