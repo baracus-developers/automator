@@ -1,0 +1,79 @@
+#!/usr/bin/env escript
+-include_lib("xmerl/include/xmerl.hrl").
+-import(xmerl_xs, 
+	[ xslapply/2, value_of/1, select/2, built_in_rules/2 ]).
+
+main(["--test"]) ->
+    ok;
+
+main(["--process", SSize]) ->
+    {Size, _} = string:to_integer(SSize),
+
+    Doc = case io:get_chars("", Size) of
+	      eof -> throw(bad_import);
+	      D -> D
+	  end,
+
+    {Xml, _} = xmerl_scan:string(Doc),
+
+    [#xmlAttribute{value=Mac}] = select("/node[@class=\"system\"]/configuration/setting[@id=\"mac\"]/@value", Xml),
+    
+    {Settings, StrippedDoc} = 
+	case select("//node[@id=\"powercontroller\"]/configuration/setting", Xml) of
+	    [] ->
+		{dict:new(), Xml};
+	    RawValues ->
+		F = fun(E) ->
+			    [#xmlAttribute{value=Key}] = select("@id", E),
+			    [#xmlAttribute{value=Value}] = select("@value", E),
+			    {Key, Value}
+		    end,
+		Values = [F(E) || E <- RawValues],  
+		{dict:from_list(Values),
+		 xmerl_dom:remove("//node[@id=\"powercontroller\"]", Xml, [])}
+	end,
+    
+    % pretend to load these values from something like a CMDB based on Mac...
+    Data = [
+	    {"type", "foo"},
+	    {"host", Mac},
+	    {"bmcaddr", "baracus.laurelwood.net"}
+	   ],
+
+    UpdatedSettings = dict:merge(fun(_K, _V1, V2) -> V2 end,
+				 Settings, dict:from_list(Data)),
+    NewContent =
+	#xmlElement{name=node,
+		    attributes=[
+				#xmlAttribute{name=id,
+					      value="powercontroller"},
+				#xmlAttribute{name=claimed,
+					      value="true"},
+				#xmlAttribute{name=class,
+					      value="controller"}
+			       ],
+		    content=[#xmlElement{name=configuration,
+					 content=[
+						  #xmlElement{name=setting,
+							      attributes=[
+									  #xmlAttribute{name=id,
+											value=Name},
+									  #xmlAttribute{name=value,
+											value=Value}
+									 ]
+							     }
+						  || {Name, Value} <- dict:to_list(UpdatedSettings)
+						 ]
+					}
+			    ]
+		   },
+    UpdatedDoc =
+	xmerl_dom:insert(NewContent,
+			 "/node[@class=\"system\"]", StrippedDoc,
+			 [{position, insert_under}]),
+
+    io:format("~s", [xmerl:export_element(UpdatedDoc, xmerl_xml)]),
+
+    ok.
+
+

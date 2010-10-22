@@ -1,0 +1,12 @@
+#!/usr/bin/env escript
+-include_lib("xmerl/include/xmerl.hrl").
+-import(xmerl_xs, 
+	[ xslapply/2, value_of/1, select/2, built_in_rules/2 ]).
+
+main(["--test"]) ->
+    ok;
+
+main(["--process", SSize]) ->
+    throw(badresponse).
+
+
