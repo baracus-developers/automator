@@ -20,8 +20,8 @@ universaltime_to_string(TimeStamp) ->
 
 flatten_data(Resolver) ->
     [
-     Resolver#resolver.id,
      Resolver#resolver.name,
+     io_lib:format("~B", [Resolver#resolver.version]),
      universaltime_to_string(Resolver#resolver.uploaded),
      Resolver#resolver.owner,
      #link{text="delete", delegate=?MODULE, postback={delete, Resolver#resolver.id}}
@@ -35,22 +35,22 @@ render_table() ->
     #cbtable{class="resolvers",
 	     data=Data,
 	     map= [
-		   index@text,
 		   name@text,
+		   version@text,
 		   uploaded@text,
 		   owner@text,
 		   actions@body
 		  ],
              header=[
-		     #tableheader{text="Id"},
 		     #tableheader{text="Name"},
+		     #tableheader{text="Version"},
 		     #tableheader{text="Uploaded"},
 		     #tableheader{text="Owner"},
 		     #tableheader{text="Actions"}
 		    ],
 	     rowspec=[
-		      #tablecell { id=index },
 		      #tablecell { id=name },
+		      #tablecell { id=version },
 		      #tablecell { id=uploaded },
 		      #tablecell { id=owner},
 		      #tablecell { id=actions }

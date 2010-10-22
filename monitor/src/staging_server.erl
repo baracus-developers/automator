@@ -292,12 +292,23 @@ handle_call({add_resolver, Name, SourceName}, _From, State) ->
     Principal = "Anonymous",
 
     F = fun() ->
+		Q = qlc:q([X#resolver.version
+			   || X=#resolver{name=Name} <- mnesia:table(resolvers)]),
+		Versions = qlc:e(Q),
+
+		Max = fun(E, Acc) when E > Acc -> E;
+			 (E, Acc) -> Acc
+		      end,
+
+		MaxVersion = lists:foldl(Max, 0, Versions),
+
 		Id = uuid:to_string(uuid:v4()),
 		Size = filelib:file_size(SourceName),
 		DestName = id_to_filename(Id),
 		
 		Resolver = #resolver{id=Id,
 				     name=Name,
+				     version=MaxVersion+1,
 				     uploaded=erlang:universaltime(),
 				     owner=Principal,
 				     size=Size
@@ -353,7 +364,17 @@ handle_call({delete_resolver, Id}, _From, State) ->
 
 handle_call(enum_resolvers, _From, State) ->
     Resolvers = util:atomic_query(qlc:q([X || X <- mnesia:table(resolvers)])),
-    {reply, {ok, Resolvers}, State};
+
+    Sort = fun(LHS, RHS) ->
+		   if
+		       LHS#resolver.name < RHS#resolver.name -> true;
+		       LHS#resolver.name =:= RHS#resolver.name,
+		       LHS#resolver.version =< RHS#resolver.version -> true;
+		       true -> false
+		   end
+	   end,
+
+    {reply, {ok, lists:sort(Sort, Resolvers)}, State};
 
 handle_call(_Request, _From, _State) ->
     throw(unexpected).

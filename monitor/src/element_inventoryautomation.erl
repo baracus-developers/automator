@@ -79,70 +79,73 @@ render_element(R) ->
 
     element_panel:render_element(Panel).
 
-event(add_rule) -> 
+resolver_to_string(Resolver) ->
+    io_lib:format("~s (v~B)", [Resolver#resolver.name, Resolver#resolver.version]).
+
+render_addrule() ->
     {ok, Profiles} = staging_server:enum_profiles(),
     {ok, Resolvers} = staging_server:enum_resolvers(),
     Actions = [none, deploy, reject],
+   
+    [
+     render_edititem(name, "Rule name"),
+     render_edititem(xpath, "Rule"),
+     #panel{class="edititem",
+	    body=[
+		  #label{class="edititem-label",
+			 text="Profile:"
+			},
+		  #dropdown{id=profile,
+			    class="edititem-input",
+			    options=[#option{text=undefined, value=undefined} |
+				     [#option{text=Val#stagingprofile.name,
+					      value=Val#stagingprofile.name}
+				      || Val <- Profiles
+				     ]
+				    ]
+			   }
+		 ]
+	   },
+     #panel{class="edititem",
+	    body=[
+		  #label{class="edititem-label",
+			 text="Resolver:"
+			},
+		  #dropdown{id=resolver,
+			    class="edititem-input",
+			    options=[#option{text=undefined, value=undefined} |
+				     [#option{text=resolver_to_string(Val),
+					      value=Val#resolver.id}
+				      || Val <- Resolvers]
+				    ]
+			   }
+		 ]
+	   },
+     #panel{class="edititem",
+	    body=[
+		  #label{class="edititem-label",
+			 text="Action:"
+			},
+		  #dropdown{id=action,
+			    class="edititem-input", 
+			    options=[#option{text=Val, value=Val}
+				     || Val <- Actions]
+			   }
+		 ]
+	   },
+     #flash{},
+     #panel{class="dialog-controls",
+	    body=[
+		  #button{text="Cancel", postback=cancel_rule, delegate=?MODULE},
+		  #button{text="Save", postback=save_rule, delegate=?MODULE}
+		 ]
+	   }
+    ].
 
+event(add_rule) ->  
     Panel = #dialog{ id="add-rule",
 		     title="Add new host rule",
-		     body=[
-			   #panel{body=[
-					render_edititem(name, "Rule name"),
-					render_edititem(xpath, "Rule"),
-					#panel{class="edititem",
-					       body=[
-						     #label{class="edititem-label",
-							    text="Profile:"
-							   },
-						     #dropdown{id=profile,
-							       class="edititem-input",
-							       options=[#option{text=undefined, value=undefined} |
-									[#option{text=Val#stagingprofile.name,
-										 value=Val#stagingprofile.name}
-									 || Val <- Profiles
-									]
-								       ]
-							      }
-						    ]
-					      },
-					#panel{class="edititem",
-					       body=[
-						     #label{class="edititem-label",
-							    text="Resolver:"
-							   },
-						     #dropdown{id=resolver,
-							       class="edititem-input",
-							       options=[#option{text=undefined, value=undefined} |
-									[#option{text=Val#resolver.name,
-										 value=Val#resolver.id}
-									 || Val <- Resolvers]
-								       ]
-							      }
-						    ]
-					      },
-					#panel{class="edititem",
-					       body=[
-						     #label{class="edititem-label",
-							    text="Action:"
-						       },
-						     #dropdown{id=action,
-							       class="edititem-input", 
-							       options=[#option{text=Val, value=Val}
-									|| Val <- Actions]
-							      }
-						    ]
-					      }
-				       ]
-				 },
-			   #flash{},
-			   #panel{class="dialog-controls",
-				  body=[
-					#button{text="Cancel", postback=cancel_rule, delegate=?MODULE},
-					#button{text="Save", postback=save_rule, delegate=?MODULE}
-				       ]
-				 }
-			  ]
+		     body=#panel{body=render_addrule()}
 		   },
     wf:insert_top("application", Panel);
 event(save_rule) ->
