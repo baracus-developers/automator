@@ -8,9 +8,6 @@ init(_Args) ->
 handle_event({Principal, stagingnode, updated, {Mac, _, _}}, State) ->
     error_logger:info_msg("Event: ~p node updated by ~p~n", [Mac, Principal]),
     {ok, State};
-handle_event({system, discovery, {Mac, _Inventory}}, State) ->
-    error_logger:info_msg("Event: {system, discovery, ~p}~n", [Mac]),
-    {ok, State};
 handle_event(Event, State) ->
     error_logger:info_msg("Event: ~p~n", [Event]),
     {ok, State}.

@@ -3,19 +3,17 @@
 -import(xmerl_xs, 
 	[ xslapply/2, value_of/1, select/2, built_in_rules/2 ]).
 
-import_doc(Acc) ->
-    case io:get_line("") of
-	eof ->
-	    Acc;
-	Data ->
-	    import_doc(Acc ++ Data)
-    end.
-
 main(["--test"]) ->
     ok;
 
-main(_Args) ->
-    Doc = import_doc(""),
+main(["--process", SSize]) ->
+    {Size, _} = string:to_integer(SSize),
+
+    Doc = case io:get_chars("", Size) of
+	      eof -> throw(bad_import);
+	      D -> D
+	  end,
+
     {Xml, _} = xmerl_scan:string(Doc),
 
     [#xmlAttribute{value=Mac}] = select("/node[@class=\"system\"]/configuration/setting[@id=\"mac\"]/@value", Xml),
@@ -54,15 +52,19 @@ main(_Args) ->
 				#xmlAttribute{name=class,
 					      value="controller"}
 			       ],
-		    content=[#xmlElement{name=setting,
-					 attributes=[
-						     #xmlAttribute{name=id,
-								   value=Name},
-						     #xmlAttribute{name=value,
-								   value=Value}
-						    ]
+		    content=[#xmlElement{name=configuration,
+					 content=[
+						  #xmlElement{name=setting,
+							      attributes=[
+									  #xmlAttribute{name=id,
+											value=Name},
+									  #xmlAttribute{name=value,
+											value=Value}
+									 ]
+							     }
+						  || {Name, Value} <- dict:to_list(UpdatedSettings)
+						 ]
 					}
-			     || {Name, Value} <- dict:to_list(UpdatedSettings)
 			    ]
 		   },
     UpdatedDoc =

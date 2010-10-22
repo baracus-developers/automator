@@ -158,8 +158,7 @@ initialize(Record=#host{power = on}, BaracusState, State)
 %------------------------------------------------------
 discovery({baracus_state_change, register}, State) ->
     Mac = State#state.mac,
-    Inventory = baracus_driver:get_inventory(Mac),
-    gen_event:notify(host_events, {system, discovery, {Mac, Inventory}}),
+    gen_event:notify(host_events, {system, discovery, Mac}),
     {next_state, wait, State}.
 
 %------------------------------------------------------

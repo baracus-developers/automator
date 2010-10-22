@@ -20,7 +20,7 @@ universaltime_to_string(TimeStamp) ->
 
 flatten_data(Resolver) ->
     [
-     uuid:to_string(Resolver#resolver.id),
+     Resolver#resolver.id,
      Resolver#resolver.name,
      universaltime_to_string(Resolver#resolver.uploaded),
      Resolver#resolver.owner,

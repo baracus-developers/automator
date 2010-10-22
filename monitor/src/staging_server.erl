@@ -13,7 +13,10 @@
 -export([add_resolver/2, delete_resolver/1, enum_resolvers/0]).
 -export([enum_nodes/0, set_param/3, deploy_node/1, reject_node/1]).
 
+-export([start_discovery/1]).
+
 resolvers_path() -> "/var/spool/cloudbuilder/resolvers/".
+pc_selector() -> "//node[@id=\"powercontroller\"]/configuration/setting".
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []). 
@@ -229,6 +232,9 @@ handle_call({reject_node, Mac}, _From, State) ->
 
 handle_call({add_rule, Name, XPath, Profile, Resolver, Action}, _From, State) ->
     F = fun() ->
+		validate_ref(stagingprofiles, Profile),
+		validate_ref(resolvers, Resolver),
+
 		case mnesia:read(stagingrules, Name, write) of
 		    [] ->
 			Priority = get_next_priority(),
@@ -240,14 +246,15 @@ handle_call({add_rule, Name, XPath, Profile, Resolver, Action}, _From, State) ->
 					      action=Action},
 			mnesia:write(stagingrules, Record, write),
 			{created, Record};
-		    [Record] ->
-			exists
+		    [Record] -> exists
 		end
 	end,
     case mnesia:transaction(F) of
 	{atomic, {created, Record}} ->
 	    gen_event:notify(host_events, {system, stagingrule, added, Record}),
 	    {reply, ok, State};
+	{aborted, {throw, Error}} ->
+	    {reply, {error, Error}, State};
 	{atomic, exists} ->
 	    {reply, {error, conflict}, State}
     end;
@@ -265,10 +272,7 @@ handle_call({delete_rule, Name}, _From, State) ->
     end;
 
 handle_call(enum_rules, _From, State) ->
-    F = fun() ->
-		enum_rules_i()
-	end,
-    {atomic, StagingRules} = mnesia:transaction(F),
+    StagingRules = enum_rules_i(),
     {reply, {ok, StagingRules}, State};
 
 handle_call({order_rules, OrderList}, _From, State) ->
@@ -288,7 +292,7 @@ handle_call({add_resolver, Name, SourceName}, _From, State) ->
     Principal = "Anonymous",
 
     F = fun() ->
-		Id = uuid:v4(),
+		Id = uuid:to_string(uuid:v4()),
 		Size = filelib:file_size(SourceName),
 		DestName = id_to_filename(Id),
 		
@@ -354,22 +358,14 @@ handle_call(enum_resolvers, _From, State) ->
 handle_call(_Request, _From, _State) ->
     throw(unexpected).
 
-handle_cast({genevent_bridge, {system, discovery, {Mac, Inventory}}}, State) ->
-    F = fun() ->
-		case mnesia:read(stagingnodes, Mac, write) of
-		    [] ->
-			Node = #stagingnode{mac=Mac,
-					    inventory=insert_globalsetting("mac", Mac, Inventory)},
-			StagingRules = enum_rules_i(),
-			process_inventory(Node, StagingRules);
-		    [Record] ->
-			throw({exists, Mac})
-		end
-	end,
-    case mnesia:transaction(F) of
-	{atomic, Action} ->
-	    gen_event:notify(host_events, {system, stagingnode, Action, Mac})
-    end,
+handle_cast({genevent_bridge, {system, discovery, Mac}}, State) ->
+    {ok, _} = supervisor:start_child(staging_sup,
+				     {Mac,
+				      {?MODULE, start_discovery, [Mac]},
+				      transient,
+				      brutal_kill,
+				      worker,
+				      [?MODULE]}),  
 
     {noreply, State};
 
@@ -422,7 +418,7 @@ profile_decode([{_, _Val} | T], Node) ->
 profile_decode([], Node) ->
     Node.
 
-process_match(Node, profile, Rule, T) when Rule#stagingrule.profile =/= undefined ->
+process_rule(Node, profile, Rule, T) when Rule#stagingrule.profile =/= undefined ->
     [Profile] = mnesia:read(stagingprofiles, Rule#stagingrule.profile, read),
     [_ | RawParams] = tuple_to_list(Profile),
     Fields = record_info(fields, stagingprofile),
@@ -433,31 +429,105 @@ process_match(Node, profile, Rule, T) when Rule#stagingrule.profile =/= undefine
 		     {{rule, Rule#stagingrule.name}, stagingnode, updated,
 		      {Node#stagingnode.mac, Node, UpdatedNode}}),
 
-    process_match(UpdatedNode, resolver, Rule, T);
-process_match(Node, profile, Rule, T) ->
-    process_match(Node, resolver, Rule, T);
+    process_rule(UpdatedNode, resolver, Rule, T);
+process_rule(Node, profile, Rule, T) ->
+    process_rule(Node, resolver, Rule, T);
 
-process_match(Node, resolver, Rule, T) when Rule#stagingrule.resolver =/= undefined ->
-    process_match(Node, action, Rule, T);
-process_match(Node, resolver, Rule, T) ->
-    process_match(Node, action, Rule, T);
+process_rule(Node, resolver, Rule, T) when Rule#stagingrule.resolver =/= undefined ->
+    Inventory = lists:flatten(
+		  xmerl:export_element(Node#stagingnode.inventory,
+				       xmerl_xml
+				      )
+		 ),
+    
+    Cmd = lists:flatten(io_lib:format("~s --process ~p",
+				      [id_to_filename(Rule#stagingrule.resolver),
+				       length(Inventory)
+				      ]
+				     )
+		       ),
 
-process_match(Node, action, Rule, T) when Rule#stagingrule.action =:= "deploy" ->
+    R = try
+	    Port = erlang:open_port({spawn, Cmd}, [use_stdio, stream, exit_status]),
+	    
+	    true = port_command(Port, Inventory),
+	    
+	    Output = case cmd_receive(Port, "") of
+			 {ok, 0, Data} -> Data;
+			 {ok, UnexpectedStatus, _Output} ->
+			     throw({resolver_failure, UnexpectedStatus})
+		     end,
+	
+	    {UpdatedInventory, _} = xmerl_scan:string(Output),
+
+	    NewNode = 
+		case xmerl_xs:select(pc_selector(), UpdatedInventory) of
+		    [] -> Node#stagingnode{inventory=UpdatedInventory};
+		    Elems ->
+			ValidTypes = sets:from_list([atom_to_list(Type) ||
+							Type <- baracus_driver:get_bmctypes()]),
+
+			F = fun(E, Acc) ->
+				    Key = select_attribute("@id", E),
+				    Value = select_attribute("@value", E),
+				    
+				    case Key of
+					"host" -> Acc#stagingnode{host=Value};
+					"bmcaddr" -> Acc#stagingnode{bmcaddr=Value};
+					"type" ->
+					    case sets:is_element(Value, ValidTypes) of
+						true -> Acc#stagingnode{type=Value};
+						false -> throw({invalidtype, Value})
+					    end;
+					"username" -> Acc#stagingnode{username=Value};
+					"password" -> Acc#stagingnode{password=Value};
+					_ -> throw({badsetting, {Key, Value}})
+				    end
+			    end,
+			lists:foldl(F,
+				    Node#stagingnode{inventory=UpdatedInventory},
+				    Elems)
+		end,
+	    
+	    {continue, NewNode}
+	catch
+	    Type:Error ->
+		error_logger:warning_msg(
+		  "Resolver ~s(~s): Error ~p:~p ~n",
+		  [Rule#stagingrule.resolver,
+		   Node#stagingnode.mac,
+		   Type, Error]), 
+		terminate
+	end,
+			
+    % check to see if we should continue processing this rule, or terminate it
+    % it and move on to the next one (if applicable)
+    case R of
+	{continue, UpdatedNode} ->
+	    process_rule(UpdatedNode, action, Rule, T);
+	terminate ->
+	    process_rules(Node, T)
+    end;
+
+process_rule(Node, resolver, Rule, T) ->
+    process_rule(Node, action, Rule, T);
+
+process_rule(Node, action, Rule, T) when Rule#stagingrule.action =:= "deploy" ->
     case deploy({rule, Rule#stagingrule.name}, Node) of
-	ok -> deployed;
-	_ -> process_inventory(Node, T)
+	ok -> ok;
+	_ -> process_rules(Node, T)
     end;
-process_match(Node, action, Rule, T) when Rule#stagingrule.action =:= "reject" ->
+process_rule(Node, action, Rule, T) when Rule#stagingrule.action =:= "reject" ->
     case reject({rule, Rule#stagingrule.name}, Node) of
-	ok -> rejected;
-	_ -> process_inventory(Node, T)
+	ok -> ok;
+	_ -> process_rules(Node, T)
     end;
-process_match(Node, action, Rule, T) ->
+process_rule(Node, action, Rule, T) ->
     error_logger:info_msg("Moving to next rule due to action=~p~n",
 			  [Rule#stagingrule.action]),
-    process_inventory(Node, T).
+    process_rules(Node, T).
 
-process_inventory(Node, [Rule | T]) ->
+process_rules(Node, [Rule | T]) ->
     error_logger:info_msg("Processing ~s with ~p~n", [Node#stagingnode.mac, Rule]),
 
     XPath = Rule#stagingrule.xpath,
@@ -473,21 +543,42 @@ process_inventory(Node, [Rule | T]) ->
 	    end,
     case Match of
 	true ->
-	    process_match(Node, profile, Rule, T);
+	    process_rule(Node, profile, Rule, T);
 	false ->
 	    error_logger:info_msg("No match~n", []),
-	    process_inventory(Node, T)
+	    process_rules(Node, T)
     end;
-process_inventory(Node, []) -> 
-    ok = mnesia:write(stagingnodes, Node, write),
-    added.
+process_rules(Node, []) -> 
+    F = fun() ->
+		mnesia:write(stagingnodes, Node, write)
+	end,
+    {atomic, ok} = mnesia:transaction(F),
+
+    gen_event:notify(host_events,
+		     {system, stagingnode, added, Node#stagingnode.mac}),
+    ok.
+
+start_discovery(Mac) ->
+    Pid = spawn_link(fun() ->
+			     Inventory = baracus_driver:get_inventory(Mac),
+			     Node = #stagingnode{mac=Mac,
+						 inventory=insert_globalsetting("mac", Mac, Inventory)},
+			     StagingRules = enum_rules_i(),
+			     ok = process_rules(Node, StagingRules),
+			     erlang:exit(normal)
+		     end),
+    {ok, Pid}.
 
 enum_rules_i() ->
-    Handle = qlc:q([X || X <- mnesia:table(stagingrules)]),
-    SortFun = fun(A, B) ->
-		      A#stagingrule.priority < B#stagingrule.priority
-	      end,
-    qlc:e((qlc:sort(Handle, [{order, SortFun}]))).
+    F = fun() ->
+		Handle = qlc:q([X || X <- mnesia:table(stagingrules)]),
+		SortFun = fun(A, B) ->
+				  A#stagingrule.priority < B#stagingrule.priority
+			  end,
+		qlc:e((qlc:sort(Handle, [{order, SortFun}])))
+	end,
+    {atomic, Rules} = mnesia:transaction(F),
+    Rules.
 
 deploy(Principal, Node) ->
     Mac = Node#stagingnode.mac,
@@ -512,7 +603,7 @@ reject(Principal, Node) ->
     ok.
 
 id_to_filename(Id) ->
-    resolvers_path() ++ uuid:to_string(Id).
+    resolvers_path() ++ Id.
 
 insert_globalsetting(Name, Value, Inventory) ->
     insert_setting("/node[@class=\"system\"]/configuration", Name, Value, Inventory).
@@ -528,4 +619,33 @@ insert_setting(XPath, Name, Value, Inventory) ->
 			       ]
 		   },
     xmerl_dom:insert(E, XPath, Inventory, [{position, insert_under}]).
+
+cmd_receive(Port, Acc) ->
+    receive
+        {Port, {data, Data}} ->
+	    cmd_receive(Port, string:concat(Acc, Data));
+        {Port, {exit_status, Status}} ->
+	    {ok, Status, Acc}
+    end.
+
+stream_chunk(Data, Port) ->
+    ChunkSize=128,
+    true = port_command(Port, string:substr(Data, 1, ChunkSize)),
+    stream_chunk(string:substr(Data, ChunkSize+1), Port);
+stream_chunk([], Port) ->
+    ok.
+
+validate_ref(_, undefined) ->
+    ok;
+validate_ref(Db, Key) ->
+    case mnesia:read(Db, Key, read) of
+	[_] -> ok;
+	_ -> throw({badarg, Key})
+    end.
+
+select_attribute(XPath, Doc) ->
+    [#xmlAttribute{value=Value}] = xmerl_xs:select(XPath, Doc),
+    Value.
+
+    
 

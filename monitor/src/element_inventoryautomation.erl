@@ -97,10 +97,12 @@ event(add_rule) ->
 							   },
 						     #dropdown{id=profile,
 							       class="edititem-input",
-							       value=undefined,
-							       options=[#option{text=Val#stagingprofile.name,
-										value=Val#stagingprofile.name}
-									|| Val <- Profiles]
+							       options=[#option{text=undefined, value=undefined} |
+									[#option{text=Val#stagingprofile.name,
+										 value=Val#stagingprofile.name}
+									 || Val <- Profiles
+									]
+								       ]
 							      }
 						    ]
 					      },
@@ -111,10 +113,11 @@ event(add_rule) ->
 							   },
 						     #dropdown{id=resolver,
 							       class="edititem-input",
-							       value=undefined,
-							       options=[#option{text=Val#resolver.name,
-										value=Val#resolver.id}
-									|| Val <- Resolvers]
+							       options=[#option{text=undefined, value=undefined} |
+									[#option{text=Val#resolver.name,
+										 value=Val#resolver.id}
+									 || Val <- Resolvers]
+								       ]
 							      }
 						    ]
 					      },
@@ -145,10 +148,10 @@ event(add_rule) ->
 event(save_rule) ->
     Name = wf:q(name),
     XPath = wf:q(xpath),
-    Profile = wf:q(profile),
-    Resolver = wf:q(resolver),
+    Profile = normalize_undefined(wf:q(profile)),
+    Resolver = normalize_undefined(wf:q(resolver)),
     Action = wf:q(action),
-    
+
     case staging_server:add_rule(Name, XPath, Profile, Resolver, Action) of
 	ok ->
 	    wf:remove("add-rule");
@@ -167,3 +170,9 @@ event({click, Id, Name}) ->
 sort_event(_Tag, Items) -> 
     ok = staging_server:order_rules(Items),
     ok.
+
+normalize_undefined(Val) ->
+    case Val of 
+	"undefined" -> undefined;
+	V -> V
+    end.
