@@ -2,28 +2,25 @@
 -behavior(gen_server).
 -include_lib("host_record.hrl").
 -include_lib("stdlib/include/qlc.hrl").
--export([run_once/1,
-	 start_link/0, init/1,
+-export([start_link/0, init/1,
 	 create/1, lookup/1, get_hostinfo/1, enum/0,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
 -record(state, {initialized}).
 
-run_once(Nodes) ->
-    io:format("Initializing hosts table~n"),
-    {atomic, ok} = mnesia:create_table(hosts,
-				       [
-					{record_name, host},
-					{attributes,
-					 record_info(fields, host)},
-					{disc_copies, Nodes}
-				       ]).
-
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
+   ok = util:open_table(hosts,
+			[
+			 {record_name, host},
+			 {attributes,
+			  record_info(fields, host)},
+			 {disc_copies, util:replicas()}
+			]),
+
     gen_server:cast(?MODULE, initialize), %defer initialization async to the startup
     {ok, #state{initialized = false}}.
 

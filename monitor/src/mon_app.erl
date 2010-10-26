@@ -18,16 +18,5 @@ start(_Type, _StartArgs) ->
 stop(_State) -> ok.
 
 run_once() ->
-    
-    Nodes = [node()],
+    mnesia:create_schema([node()]).   
 
-    mnesia:create_schema(Nodes),
-    mnesia:start(),
-
-    hosts_server:run_once(Nodes),
-    pools_server:run_once(Nodes),
-    machines_server:run_once(Nodes),
-    baracus_driver:run_once(Nodes),
-    puppetca_driver:run_once(Nodes),
-    
-    init:stop().

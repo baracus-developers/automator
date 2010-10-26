@@ -4,20 +4,17 @@
 
 -record(deltakv, {key, value}).
 
-run_once(Table, Nodes) ->
-    {atomic, ok} = mnesia:create_table(Table,
-				       [
-					{record_name, deltakv},
-					{attributes,
-					 record_info(fields, deltakv)},
-					{disc_copies, Nodes}
-				       ]).
-
 start_link(Table) ->
     gen_server:start_link({local, Table}, delta_keyvalue, Table, []).
 
 init(Table) ->
-    ok = mnesia:wait_for_tables([Table], 20000),
+    ok = util:open_table(Table,
+			 [
+			  {record_name, deltakv},
+			  {attributes,
+			   record_info(fields, deltakv)},
+			  {disc_copies, util:replicas()}
+			 ]),
     {ok, Table}.
 
 analyze(Table, Data) ->

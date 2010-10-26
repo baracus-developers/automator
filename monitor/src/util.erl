@@ -1,6 +1,7 @@
 -module(util).
 -export([os_cmd_format/2, os_cmd/2, os_cmd/1]).
 -export([open_table/2, replicas/0, atomic_query/1, render_edititem/2]).
+-export([template/1]).
 
 -include_lib("nitrogen/include/wf.inc").
 
@@ -56,4 +57,6 @@ render_edititem(Id, Label) ->
 		 ]
 	  }.
 
-
+template(Name) ->
+    PrivDir = code:priv_dir(cloudbuilder),
+    #template { file= PrivDir ++ "/webui/templates/" ++ Name }.

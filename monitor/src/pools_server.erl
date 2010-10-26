@@ -1,8 +1,7 @@
 -module(pools_server).
 -behavior(gen_server).
 -include_lib("stdlib/include/qlc.hrl").
--export([run_once/1,
-	 start_link/0, init/1,
+-export([start_link/0, init/1,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
@@ -13,30 +12,27 @@
 -record(member, {mac, pool, category}).
 -record(pool, {name, system, created_on, rules}).
 
-
-
-run_once(Nodes) ->
-    io:format("Initializing pools tables~n"),
-    {atomic, ok} = mnesia:create_table(members,
-				       [
-					{record_name, member},
-					{attributes,
-					 record_info(fields, member)},
-					{disc_copies, Nodes}
-				       ]),
-    {atomic, ok} = mnesia:create_table(pools,
-				       [
-					{record_name, pool},
-					{attributes,
-					 record_info(fields, pool)},
-					{disc_copies, Nodes}
-				       ]),
-    create_pool("Default", true).
-
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
+    ok = util:open_table(members,
+			 [
+			  {record_name, member},
+			  {attributes,
+			   record_info(fields, member)},
+			  {disc_copies, util:replicas()}
+			 ]),
+    ok = util:open_table(pools,
+			 [
+			  {record_name, pool},
+			  {attributes,
+			   record_info(fields, pool)},
+			  {disc_copies, util:replicas()}
+			 ]),
+
+    create_pool("Default", true),
+
     genevent_bridge:add_genserver_handler(host_events, self(), self()),
     {ok, #state{}}.
 

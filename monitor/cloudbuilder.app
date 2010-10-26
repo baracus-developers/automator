@@ -1,5 +1,5 @@
-{application, monitor, [{description, "Cloud Monitor"},
-{vsn, "0.1.0"},
+{application, cloudbuilder, [{description, "Cloud Monitor"},
+{vsn, "__VSN__"},
 {modules, [__MODULES__]},
 {registered, [mon_sup]},
 {env, [

@@ -6,16 +6,6 @@
 
 -record(state, {initialized}).
 
-run_once(Nodes) ->
-    io:format("Initializing machines table~n"),
-    {atomic, ok} = mnesia:create_table(machines,
-				       [
-					{record_name, machine},
-					{attributes,
-					 record_info(fields, machine)},
-					{disc_copies, Nodes}
-				       ]).
-
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
@@ -23,6 +13,14 @@ host2id(Host) ->
     list_to_atom(string:to_lower(Host)).
 
 init(_Args) ->
+    ok = util:open_table(machines,
+			 [
+			  {record_name, machine},
+			  {attributes,
+			   record_info(fields, machine)},
+			  {disc_copies, util:replicas()}
+			 ]),
+
     gen_server:cast(?MODULE, initialize), %defer initialization async to the startup
     {ok, #state{initialized = false}}.
 

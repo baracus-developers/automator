@@ -15,7 +15,7 @@
 
 -export([start_discovery/1]).
 
-resolvers_path() -> "/var/spool/cloudbuilder/resolvers/".
+resolvers_path() -> "/var/cloudbuilder/resolvers/".
 pc_selector() -> "//node[@id=\"powercontroller\"]/configuration/setting".
 
 start_link() ->

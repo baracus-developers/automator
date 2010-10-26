@@ -5,7 +5,7 @@
 -include_lib("hostinfo.hrl").
 -include_lib("wf_elements.hrl").
 
-main() -> #template { file="./monitor/site/templates/bare.html" }.
+main() -> util:template("bare.html").
 
 title() -> "Novell Cloud-Builder".
 

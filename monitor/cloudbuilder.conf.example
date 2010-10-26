@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cloudbuilder-config>
+  <cookie>__COOKIE__</cookie>
+  <domain>example.net</domain>
+  <admin type="openid">http://ghaskins.ssocircle.com</admin>
+  <contacts>
+    <contact>node1.example.net</contact>
+    <contact>node2.example.net</contact>
+  </contacts>
+</cloudbuilder-config>

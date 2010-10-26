@@ -1,12 +1,8 @@
 -module(puppetca_driver).
 -include_lib("certentry.hrl").
--export([run_once/1, start_link/0, refresh/0, clear/1, sign/1, find/1]).
+-export([start_link/0, refresh/0, clear/1, sign/1, find/1]).
 
 tablename() -> puppetca.
-
-run_once(Nodes) ->
-    io:format("Initializing puppetca table~n"),
-    {atomic, ok} = delta_keyvalue:run_once(tablename(), Nodes).
 
 start_link() ->
     delta_keyvalue:start_link(tablename()).

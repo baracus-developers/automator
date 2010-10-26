@@ -5,10 +5,6 @@
 
 tablename() -> bahost.
 
-run_once(Nodes) ->
-    io:format("Initializing bahost table~n"),
-    {atomic, ok} = delta_keyvalue:run_once(tablename(), Nodes).
-
 start_link() ->
     delta_keyvalue:start_link(tablename()).
  

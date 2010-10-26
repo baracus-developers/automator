@@ -1,9 +1,10 @@
 {release,
- {"monitor", "0.1.0"},
- {erts, "5.7.5"},
+ {"cloudbuilder", "__VSN__"},
+ {erts, "5.8.1"},
  [{kernel, "2.14.1"},
   {stdlib, "1.17.1"},
   {sasl, "2.1.9.2"},
+  {xmerl, "1.2.6"},
   {mnesia, "4.4.15"},
   {inets, "5.5"},
   {ssl, "4.0.1"},
@@ -15,5 +16,5 @@
   {nprocreg, "0.1"},
   {simple_bridge, "1.0"},
   {nitrogen, "2.0.1"},
-  {monitor, "0.1.0"}
+  {cloudbuilder, "__VSN__"}
 ]}.

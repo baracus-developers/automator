@@ -35,12 +35,14 @@ init([Port]) ->
 
     ok = yaws_security:register_userdetails(fun(Token) -> userdetails(Token) end),
 
+    PrivDir = code:priv_dir(cloudbuilder),
+
     GC = yaws_config:make_default_gconf(false, "webapp"),
     SC = #sconf{
       port = 8001,
       servername = "localhost",
       listen = {0, 0, 0, 0},
-      docroot = "./monitor/site/static",
+      docroot = PrivDir ++ "/webui/static",
       appmods = [{"/", yaws_security_filterchain}]
     },
 
