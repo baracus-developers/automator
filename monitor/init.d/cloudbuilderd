@@ -160,6 +160,7 @@ rc_reset
 export VSN=%FINAL_VSN%
 export ROOT=%FINAL_ROOTDIR%
 export HOME=%FINAL_HOME%
+export LOGDIR=%FINAL_LOGDIR%
 export ERL_LIBS=$ROOT/lib
 
 BOOTSCRIPT=$ROOT/releases/$VSN/start
@@ -174,7 +175,7 @@ case "$1" in
 	    erl -noshell -name $NODENAME -mnesia dir '"%FINAL_HOME%/db"' -eval "mnesia:create_schema([node()])" -s init stop
 	fi
 
-	run_erl -daemon /tmp $HOME/logs  "erl -boot $BOOTSCRIPT -name $NODENAME -yaws embedded true -mnesia dir \'\"$HOME/db\"\'"
+	run_erl -daemon /tmp $LOGDIR  "erl -boot $BOOTSCRIPT -name $NODENAME -yaws embedded true -mnesia dir \'\"$HOME/db\"\'"
 
 
 #" -kernel net_ticktime 5 -proto_dist inet_ssl -ssl_dist_opt cacertfile /var/lib/puppet/ssl/certs/ca.pem -ssl_dist_opt server_certfile /var/lib/puppet/ssl/certs/$(hostname --long).pem -ssl_dist_opt server_keyfile /var/lib/puppet/ssl/private_keys/$(hostname --long).pem -ssl_dist_opt verify verify_peer depth 1"

@@ -15,7 +15,7 @@
 
 -export([start_discovery/1]).
 
-resolvers_path() -> "/var/cloudbuilder/resolvers/".
+resolvers_path() -> "/resolvers/".
 pc_selector() -> "//node[@id=\"powercontroller\"]/configuration/setting".
 
 start_link() ->
@@ -625,7 +625,8 @@ reject(Principal, Node) ->
     ok.
 
 id_to_filename(Id) ->
-    resolvers_path() ++ Id.
+    Home = os:getenv("HOME"),
+    Home ++ resolvers_path() ++ Id.
 
 insert_globalsetting(Name, Value, Inventory) ->
     insert_setting("/node[@class=\"system\"]/configuration", Name, Value, Inventory).
