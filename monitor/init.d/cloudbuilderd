@@ -159,8 +159,8 @@ rc_reset
 
 export VSN=%FINAL_VSN%
 export ROOT=%FINAL_ROOTDIR%
-export PATH=%FINAL_BINDIR%:$PATH
 export HOME=%FINAL_HOME%
+export ERL_LIBS=$ROOT/lib
 
 BOOTSCRIPT=$ROOT/releases/$VSN/start
 NODENAME=cloudbuilderd
@@ -171,7 +171,7 @@ case "$1" in
 	## Start daemon with startproc(8). If this fails
 	## the return value is set appropriately by startproc.
 	if [ ! -d $HOME/db ]; then
-	    erl -boot $ROOT/releases/$VSN/simple -noshell -name $NODENAME -mnesia dir '"%FINAL_HOME%/db"' -eval "mnesia:create_schema([node()])" -s init stop
+	    erl -noshell -name $NODENAME -mnesia dir '"%FINAL_HOME%/db"' -eval "mnesia:create_schema([node()])" -s init stop
 	fi
 
 	run_erl -daemon /tmp $HOME/logs  "erl -boot $BOOTSCRIPT -name $NODENAME -yaws embedded true -mnesia dir \'\"$HOME/db\"\'"
@@ -186,8 +186,6 @@ case "$1" in
 	echo -n "Shutting down cloudbuilder "
 	## Stop daemon with killproc(8) and if this fails
 	## killproc sets the return value according to LSB.
-
-	pkill beam
 
 	# Remember status and be verbose
 	rc_status -v

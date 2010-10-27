@@ -31,6 +31,9 @@ $(EBINDIR)/$(NAME).app: $(NAME).app Makefile
 
 $(OBJS): $(SRCS) Makefile
 
+$(OBJDIR):
+	@mkdir -p $(OBJDIR)
+
 $(SITEDIR)/%: site/%
 	@mkdir -p $(shell dirname $@)
 	cp $< $@
@@ -41,7 +44,7 @@ $(EBINDIR)/%.beam: src/%.erl Makefile
 	@mkdir -p $(EBINDIR)
 	@erlc $(INCLUDES) -o $(EBINDIR) $<
 
-$(OBJDIR)/$(NAME).rel: $(NAME).rel
+$(OBJDIR)/$(NAME).rel: $(NAME).rel $(OBJDIR)
 	@echo "Instailling $< to $@"
 	@cat $< | sed "s/__VSN__/$(VERSION).$(RELEASE)/" > $@
 
@@ -59,7 +62,7 @@ $(OBJDIR)/$(NAME).tar.gz: $(OBJDIR)/$(NAME).boot $(ISITES)
 	@echo "Creating (Release) $@"
 	@cd $(OBJDIR); erl -noshell $(PKGS) \
 	-pa /usr/lib/yaws/ebin -pa ./ebin \
-	-eval "systools:make_tar(\"$(NAME)\", [{erts, code:root_dir()}])" \
+	-eval "systools:make_tar(\"$(NAME)\", [{dirs, [include]}])" \
 	 -s init stop
 
 tests: application
