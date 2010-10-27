@@ -1,7 +1,7 @@
 %define rpmrel _RPM_RELEASE
 %define conf cloudbuilder.conf.example
 
-BuildRequires: erlang yaws eopenid nitrogen
+BuildRequires: erlang yaws yaws_security nitrogen xmerl_dom
 
 Summary: cloudbuilder - A tool to manage large scale service provisioning
 Name: cloudbuilder
