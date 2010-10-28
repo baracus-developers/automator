@@ -18,6 +18,7 @@ INCLUDES += -I/usr/lib
 INCLUDES += -I./include
 RPMBIN=$(OBJDIR)/$(NAME)-$(VERSION).tar.gz
 INSTPATH ?= /tmp/cloudbuilder
+EFLAGS += -Ddebug +debug_info
 
 all: application tests
 
@@ -42,7 +43,7 @@ $(EBINDIR)/%.beam: src/%.erl Makefile
 	@touch $(NAME).app
 	@echo "Compiling (Erlang) $< to $@"
 	@mkdir -p $(EBINDIR)
-	@erlc $(INCLUDES) -o $(EBINDIR) $<
+	@erlc $(EFLAGS) $(INCLUDES) -o $(EBINDIR) $<
 
 $(OBJDIR)/$(NAME).rel: $(NAME).rel $(OBJDIR)
 	@echo "Instailling $< to $@"
