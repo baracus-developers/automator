@@ -54,11 +54,6 @@ $(OBJDIR)/$(NAME).boot: $(OBJDIR)/$(NAME).rel application
 	@mkdir -p $(OBJDIR)
 	@erlc -pa /usr/lib/yaws/ebin -pa $(EBINDIR) -o $(OBJDIR) $<
 
-$(OBJDIR)/simple.boot: simple.rel
-	@echo "Compiling (BOOT) $< to $@"
-	@mkdir -p $(OBJDIR)
-	@erlc -o $(OBJDIR) $<
-
 $(OBJDIR)/$(NAME).tar.gz: $(OBJDIR)/$(NAME).boot $(ISITES)
 	@echo "Creating (Release) $@"
 	@cd $(OBJDIR); erl -noshell $(PKGS) \
@@ -83,10 +78,9 @@ clean:
 $(INSTPATH):
 	@mkdir -p $(INSTPATH)
 
-install: $(INSTPATH) release $(OBJDIR)/simple.boot
+install: $(INSTPATH) release
 	@echo "Installing to $(INSTPATH)"
 	@cat $(OBJDIR)/$(NAME).tar.gz | (cd $(INSTPATH); tar -zxv)
-	cp $(OBJDIR)/simple.boot $(INSTPATH)/releases/$(VERSION).$(RELEASE)
 
 $(OBJDIR)/$(NAME)-$(VERSION):
 	@mkdir -p $(OBJDIR)/$(NAME)-$(VERSION)
