@@ -9,9 +9,15 @@ title() -> "CloudBuilder: Authentication Required".
 layout() ->
     ClaimedId = wf:cookie("openid.claimed_id"),
 
+    case wf:q(msg) of
+	undefined -> ok;
+	Msg -> wf:flash(wf:url_decode(Msg))
+    end,
+
     [
      #panel{ class="login-logo",
 	     body=#image{image="/images/cloudbuilder-logo.png"}},
+     #flash{},
      #panel { class="login-input-panel",
 	      body=[
 		    #image { class="openid-logo",

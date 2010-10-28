@@ -56,7 +56,16 @@ init([Port]) ->
 forbidden_filter(Arg, Ctx) ->
     try yaws_security_filterchain:next(Arg, Ctx)
     catch
-	throw:forbidden -> {redirect_local, "/forbidden"}
+	throw:forbidden -> {redirect_local, "/forbidden"};
+	throw:{login_failed, Error} ->
+	    Msg = case Error of
+		      {connection_failed, _} ->
+			  "IDP connection failed";
+		      _ ->
+			  "Unspecified login failure"
+		  end,
+	    Url = wf:f("/login?msg=~s", [wf:url_encode(Msg)]),
+	    {redirect_local, Url}
     end.
 
 % this function is invoked by the yaws-security framework after a user has successfully
