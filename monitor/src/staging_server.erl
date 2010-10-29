@@ -470,14 +470,18 @@ process_rule(Node, resolver, Rule, T) when Rule#stagingrule.resolver =/= undefin
 		       ),
 
     R = try
-	    Port = erlang:open_port({spawn, Cmd}, [use_stdio, stream, exit_status]),
+	    Port = erlang:open_port({spawn, Cmd},
+				    [stderr_to_stdout,
+				     use_stdio,
+				     stream,
+				     exit_status]),
 	    
 	    true = port_command(Port, Inventory),
 	    
 	    Output = case cmd_receive(Port, "") of
 			 {ok, 0, Data} -> Data;
-			 {ok, UnexpectedStatus, _Output} ->
-			     throw({resolver_failure, UnexpectedStatus})
+			 {ok, UnexpectedStatus, Data} ->
+			     throw({resolver_failure, {UnexpectedStatus, Data}})
 		     end,
 	
 	    {UpdatedInventory, _} = xmerl_scan:string(Output),
