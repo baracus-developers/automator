@@ -47,14 +47,17 @@ provision(Mac, Hostname, default) ->
     util:os_cmd_format("bado build --mac ~s --profile sumatra --ip dhcp --hostname ~s --module puppet", [Mac, Hostname]).
 
 poweron(Mac) ->
+    util:os_cmd_format("bapower on --mac ~s", [Mac]),
     gen_event:notify(host_events, {baracus, poweron, Mac}),
     void.
 
 poweroff(Mac) ->
+    util:os_cmd_format("bapower off --mac ~s", [Mac]),
     gen_event:notify(host_events, {baracus, poweroff, Mac}),
     void.
 
 powercycle(Mac) ->
+    util:os_cmd_format("bapower cycle --mac ~s", [Mac]),
     gen_event:notify(host_events, {baracus, powercycle, Mac}),
     void.
 
