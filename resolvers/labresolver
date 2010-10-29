@@ -1,0 +1,124 @@
+#!/usr/bin/env escript
+-include_lib("xmerl/include/xmerl.hrl").
+-import(xmerl_xs, 
+	[ xslapply/2, value_of/1, select/2, built_in_rules/2 ]).
+
+main(["--test"]) ->
+    ok;
+
+main(["--process", SSize]) ->
+    {Size, _} = string:to_integer(SSize),
+
+    Doc = case io:get_chars("", Size) of
+	      eof -> throw(bad_import);
+	      D -> D
+	  end,
+
+    {Xml, _} = xmerl_scan:string(Doc),
+
+    [#xmlAttribute{value=Mac}] = select("/node[@class=\"system\"]/configuration/setting[@id=\"mac\"]/@value", Xml),
+    
+    {Settings, StrippedDoc} = 
+	case select("//node[@id=\"powercontroller\"]/configuration/setting", Xml) of
+	    [] ->
+		{dict:new(), Xml};
+	    RawValues ->
+		F = fun(E) ->
+			    [#xmlAttribute{value=Key}] = select("@id", E),
+			    [#xmlAttribute{value=Value}] = select("@value", E),
+			    {Key, Value}
+		    end,
+		Values = [F(E) || E <- RawValues],  
+		{dict:from_list(Values),
+		 xmerl_dom:remove("//node[@id=\"powercontroller\"]", Xml, [])}
+	end,
+    
+    File = pgrep("/etc/libvirt/qemu", Mac),
+    [Domain, "xml"] = string:tokens(File, "."),
+
+    Data = [
+	    {"type", "virsh"},
+	    {"host", Domain},
+	    {"bmcaddr", "127.0.0.1"},
+	    {"username", "none"},
+	    {"password", "none"}
+	   ],
+
+    UpdatedSettings = dict:merge(fun(_K, _V1, V2) -> V2 end,
+				 Settings, dict:from_list(Data)),
+    NewContent =
+	#xmlElement{name=node,
+		    attributes=[
+				#xmlAttribute{name=id,
+					      value="powercontroller"},
+				#xmlAttribute{name=claimed,
+					      value="true"},
+				#xmlAttribute{name=class,
+					      value="controller"}
+			       ],
+		    content=[#xmlElement{name=configuration,
+					 content=[
+						  #xmlElement{name=setting,
+							      attributes=[
+									  #xmlAttribute{name=id,
+											value=Name},
+									  #xmlAttribute{name=value,
+											value=Value}
+									 ]
+							     }
+						  || {Name, Value} <- dict:to_list(UpdatedSettings)
+						 ]
+					}
+			    ]
+		   },
+    UpdatedDoc =
+	xmerl_dom:insert(NewContent,
+			 "/node[@class=\"system\"]", StrippedDoc,
+			 [{position, insert_under}]),
+
+    io:format("~s", [xmerl:export_element(UpdatedDoc, xmerl_xml)]),
+
+    ok.
+
+% helper function to do a parallel search for a reg-ex pattern within a directory
+pgrep(Dir, Pattern) ->
+    {ok, Files} = file:list_dir(Dir),
+ 
+    Parent = self(),
+    Work = fun(File) ->
+		   Path = Dir ++ "/" ++ File,
+		   {ok, Data} = file:read_file(Path),
+		   StringData = binary_to_list(Data),
+
+		   case re:run(StringData, Pattern, []) of
+		       {match, _} ->
+			   Parent ! {self(), {match, File}};
+		       nomatch ->
+			   Parent ! {self(), nomatch}
+		   end
+	   end,
+    Wrapper = fun(File) ->
+		      try Work(File)
+		      catch
+			  _:_ -> Parent ! {self(), nomatch}
+		      end
+	      end,
+    Pids = [spawn_link(fun() -> Wrapper(File) end) || File <- Files],
+ 
+    File = lists:foldl(fun(Pid, nomatch) ->
+			      receive
+				  {Pid, nomatch} -> nomatch; 
+				  {Pid, {match, File}} -> File
+			      end;
+			 (Pid, File) ->
+			      receive
+				  {Pid, nomatch} -> File
+			      end
+		      end,
+		      nomatch,
+		      Pids),
+
+    case File of
+	nomatch -> throw("File not found");
+	_ -> File
+    end.
