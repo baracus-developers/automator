@@ -1,3 +1,3 @@
 
--record(host, {mac, hostname, personality, power}).
+-record(host, {mac, zone, hostname, personality, power}).
 

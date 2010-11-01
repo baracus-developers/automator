@@ -5,10 +5,10 @@
 -export([init/1, discovery/2]).
 -compile(export_all).
 
--record(state, {id, mac}).
+-record(state, {id, zone, mac}).
 
-init([Id, Mac]) ->
-    {ok, initialize, #state{id = Id, mac = Mac}, 0}.
+init([Id, Zone, Mac]) ->
+    {ok, initialize, #state{id = Id, zone = Zone, mac = Mac}, 0}.
 
 %------------------------------------------------------------------------
 
@@ -39,12 +39,17 @@ get_hostinfo(Mac) ->
 
 %------------------------------------------------------------------------
 
+get_hostinfo_i(StateName, State) ->
+    #hostinfo{mac = State#state.mac,
+	      zone = State#state.zone,
+	      state = StateName}.
+
 handle_info({get_hostinfo, From}, running, State) ->
     {ok, MachineInfo} = machine_fsm:info(get_hostname(State)),
-    From ! {hostinfo, {ok, #hostinfo{mac = State#state.mac, state = MachineInfo}}},
+    From ! {hostinfo, {ok, get_hostinfo_i(MachineInfo, State)}},
     {next_state, running, State};
 handle_info({get_hostinfo, From}, StateName, State) ->
-    From ! {hostinfo, {ok, #hostinfo{mac = State#state.mac, state = StateName}}},
+    From ! {hostinfo, {ok, get_hostinfo_i(StateName, State)}},
     {next_state, StateName, State}.
 
 subst(Old, New, Data) ->

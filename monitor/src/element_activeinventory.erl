@@ -8,34 +8,77 @@
 
 reflect() -> record_info(fields, activeinventory).
 
-get_host(Host) ->
-    {ok, HostInfo} = hosts_server:get_hostinfo(Host),
-    [Host, atom_to_list(HostInfo#hostinfo.state)].
+flatten(Selected, Mac, Pool, Category) ->
+    {ok, Host} = hosts_server:get_hostinfo(Mac),
 
-get_hosts() ->
-    {ok, Hosts} = hosts_server:enum(),
-    [get_host(Host) || Host <- Hosts].
+    SelectedId = wf:temp_id(),
+
+    [
+     SelectedId,
+     sets:is_element(Mac, Selected),
+     {node_toggle, SelectedId, Mac},
+     Host#hostinfo.zone,
+     Mac,
+     wf:f("~s/~p", [Pool, Category]),
+     "",
+     Host#hostinfo.state
+    ].
+
+get_members(Pool) ->
+    {ok, Members} = pools_server:enum_members(Pool),
+    [{Mac, Pool, Category} || {Mac, Category} <- Members].
 
 get_pools() ->
     {ok, Pools} = pools_server:enum(),
     Pools.
 
 render_table() ->
+    Members = lists:flatten([get_members(Pool) || Pool <- get_pools()]),
+    
+    Macs = [Mac || {Mac, _, _} <- Members],
+    Selected = sets:intersection([wf:state_default(selectednodes, sets:new()),
+				  sets:from_list(Macs)]),
+    wf:state(selectednodes, Selected),
+
+    Rows = [flatten(Selected, Mac, Pool, Category) 
+	    || {Mac, Pool, Category} <- Members],
+    
     #cbtable{class="nodes",
-	     data=get_hosts(),
+	     data=Rows,
 	     map= [
-		   macLabel@text, 
-		   statusLabel@text
+		   selected@id,
+		   selected@checked,
+		   selected@postback,
+		   zone@text,
+		   mac@text,
+		   pool@text,
+		   service@text,
+		   status@text
 		  ],
              header=[
-		     #tableheader { text="" },
+		     #tableheader{body=[
+					#link{text="all",
+					      delegate=?MODULE,
+					      postback=nodes_select_all},
+					" ",
+					#link{text="none",
+					      delegate=?MODULE,
+					      postback=nodes_select_none}
+				       ]
+				 },
+		     #tableheader { text="Zone" },
 		     #tableheader { text="MAC" },
+		     #tableheader { text="Pool" },
+		     #tableheader { text="Service" },
 		     #tableheader { text="Status" }
 		    ],
 	     rowspec=[
-		      #tablecell { body=#checkbox{} },
-		      #tablecell { id=macLabel },
-		      #tablecell { id=statusLabel }
+		      #tablecell { body=#checkbox{id=selected, delegate=?MODULE} },
+		      #tablecell { id=zone },
+		      #tablecell { id=mac },
+		      #tablecell { id=pool },
+		      #tablecell { id=service },
+		      #tablecell { id=status }
 		     ]
 	    }.
 
@@ -43,59 +86,22 @@ handle_event(Id, Event) ->
     wf:update(Id, render_table()),
     wf:flush().
 
-render_pools() ->
-    #panel{ body=[
-		  #h1{text="Pools"},
-		  #dropdown{id=select_pool,
-			    value="Default",
-			    postback=select_pool,
-			    delegate=?MODULE,
-			    options=[
-				     #option{text=Name, value=Name}
-				     || Name <- get_pools()
-				    ]
-			   },
-		  #p{},
-		  #google_chart {
-		      title="\"Default\" Pool Capacity",
-		      type=pie3d,
-		      width=400, height=250,
-		      
-		      axes=[
-			    #chart_axis { position=bottom,
-					  labels=["In Use",
-						  "Free",
-						  "Sick"] }
-			   ],
-		      data=[
-			    #chart_data { legend="Data 1", 
-					  values=[45, 50, 5] 
-					}
-			   ]
-		     }
-		 ]
-	  }.
-
 render_nodes() ->
     Id = wf:temp_id(),
+    comet_event_relay:add_handler(pool_events, Id ++ "-pools",
+				  fun(Event) -> handle_event(Id, Event) end),   
     comet_event_relay:add_handler(host_events, Id ++ "-hosts",
 				  fun(Event) -> handle_event(Id, Event) end),   
     comet_event_relay:add_handler(machine_events, Id ++ "-machines",
 				  fun(Event) -> handle_event(Id, Event) end),   
-    #panel{ body=[
-		  #h1{ text="Nodes"},
-		  #panel{ id=Id, body = render_table()}
-		 ]
-	  }.
+    [
+     #h1{ text="Nodes"},
+     #panel{ id=Id, body = render_table()}
+    ].
 
 render_element(R) ->
-    Panel = #panel{ body=[
-			 render_pools(),
-			 render_nodes()
-			 ]
-		  },
+    Panel = #panel{ body=render_nodes() },
     element_panel:render_element(Panel).
 
-event(select_pool) ->
-    Pool = wf:q(select_pool),
-    io:format("Selected: ~p~n", [Pool]).
+event(_) ->
+    ok.

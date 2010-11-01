@@ -1,15 +1,15 @@
 -module(bahost_parser).
 -include_lib("bahost_record.hrl").
--export([process/1]).
+-export([process/2]).
 
 divider() -> "-----------------------------------------------------------------------------".
 header() ->  "mac               hostname          pxecurr    pxenext    state     active   ".
 
-process(RawData) ->
+process(Zone, RawData) ->
     try
 	RawLines = string:tokens(RawData, "\n"),
 	StrippedLines = parseheader(RawLines),
-	lists:map(fun(X) -> parseline(X) end, StrippedLines)
+	lists:map(fun(X) -> parseline(Zone, X) end, StrippedLines)
     catch
 	error:Reason ->
 		erlang:error({Reason, RawData, erlang:get_stacktrace()})
@@ -50,13 +50,14 @@ parseheader(Tokens) ->
 
 validmac() -> "([0-9A-F][0-9A-F]:){5}[0-9A-F][0-9A-F]".
 
-parseline(Line) ->
+parseline(Zone, Line) ->
     [Mac, Hostname, PxeCurr, PxeNext, State, Active] = string:tokens(Line, " "),
     case re:run(Mac, validmac(), [{capture, first, list}]) of
 	{match, [CapturedMac]} ->
 	    if
 		Mac =:= CapturedMac ->
 		    {Mac, #bahost{mac = Mac,
+				  zone = Zone,
 				  pxecurr = list_to_atom(PxeCurr),
 				  pxenext = list_to_atom(PxeNext),
 				  state = list_to_atom(State),

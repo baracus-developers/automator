@@ -3,7 +3,7 @@
 -include_lib("host_record.hrl").
 -include_lib("stdlib/include/qlc.hrl").
 -export([start_link/0, init/1,
-	 create/1, lookup/1, get_hostinfo/1, enum/0,
+	 create/2, lookup/1, get_hostinfo/1, enum/0,
 	 handle_call/3, handle_cast/2, handle_info/2,
 	 terminate/2, code_change/3]).
 
@@ -27,8 +27,8 @@ init(_Args) ->
 mac2id(Mac) ->
     list_to_atom(string:concat("hostfsm-", Mac)).    
 
-create(Mac) ->
-    gen_server:call(?MODULE, {create, Mac}).
+create(Zone, Mac) ->
+    gen_server:call(?MODULE, {create, {Zone, Mac}}).
 
 lookup(Spec) -> %either {mac, Mac}, or {hostname, Hostname}
     gen_server:call(?MODULE, {lookup, Spec}).
@@ -47,10 +47,10 @@ do(Q) ->
     {atomic, Val} = mnesia:transaction(F),
     Val.
 
-create_fsm(Mac) ->
+create_fsm(Zone, Mac) ->
     Id = mac2id(Mac),
     StartFunc = {gen_fsm, start_link,
-		 [{local, Id}, host_fsm, [Id, Mac], []]},
+		 [{local, Id}, host_fsm, [Id, Zone, Mac], []]},
     {ok, _} = supervisor:start_child(hosts_sup,
 				     {Id,
 				      StartFunc,
@@ -60,12 +60,13 @@ create_fsm(Mac) ->
 				      [host_fsm]}),    
     {ok, Id}.
 
-handle_call({create, Mac}, _From, State) ->
+handle_call({create, {Zone, Mac}}, _From, State) ->
     F = fun() ->
 		case mnesia:read(hosts, Mac, write) of
 		    [] ->
 			Record = #host{
 			  mac = Mac,
+			  zone = Zone,
 			  hostname = undefined,
 			  personality = undefined,
 			  power = undefined
@@ -78,7 +79,7 @@ handle_call({create, Mac}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, {created, _Record}} ->
-	    {ok, Id} = create_fsm(Mac),
+	    {ok, Id} = create_fsm(Zone, Mac),
 	    {reply, {ok, Id}, State};
 	{atomic, exists} ->
 	    {reply, exists, State}
@@ -102,8 +103,8 @@ handle_call(Request, From, State) ->
     {stop, {unexpected_call, Request}, State}.
 
 handle_cast(initialize, State=#state{initialized = false}) ->
-    Hosts = enum_i(),
-    [create_fsm(Mac) || Mac <- Hosts],
+    Hosts = do(qlc:q([X || X <- mnesia:table(hosts)])),
+    [create_fsm(Host#host.zone, Host#host.mac) || Host <- Hosts],
     {noreply, State#state{initialized = true}};
 handle_cast(Request, State) ->
     {stop, {unexpected_cast, Request}, State}.

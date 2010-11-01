@@ -2,8 +2,10 @@
 -include_lib("bahost_record.hrl").
 -export([start_link/0]).
 
+-record(state, {zone}).
+
 start_link() ->
-    Pid = proc_lib:spawn_link(fun() -> poller() end),
+    Pid = proc_lib:spawn_link(fun() -> init() end),
     {ok, Pid}.
 
 process({add, {Mac, Record}}) ->		      
@@ -13,9 +15,13 @@ process({update, {Mac, OldRecord, NewRecord}}) ->
     gen_event:notify(host_events,
 		     {baracus, update, Mac, OldRecord, NewRecord}).
 
-poller() ->
-    Delta = baracus_driver:refresh(),
+init() ->
+    [_, Zone] = string:tokens(atom_to_list(node()), "@"),
+    poller(#state{zone=Zone}).
+
+poller(State) ->
+    Delta = baracus_driver:refresh(State#state.zone),
     lists:map(fun(I) -> process(I) end, Delta),
     timer:sleep(5000),
-    poller().
+    poller(State).
 

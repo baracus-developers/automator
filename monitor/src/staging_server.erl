@@ -618,7 +618,8 @@ deploy(Principal, Node) ->
     case host_fsm:configure_power(Mac, PowerConfig) of
 	ok ->
 	    gen_event:notify(host_events,
-			     {Principal, stagingnode, deployed, Mac}),
+			     {Principal, stagingnode, deployed,
+			      {Mac, Node#stagingnode.pool}}),
 	    ok;
 	Else -> Else
     end.

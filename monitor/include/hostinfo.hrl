@@ -1,2 +1,2 @@
 
--record(hostinfo, {mac, state}).
+-record(hostinfo, {mac, zone, state}).

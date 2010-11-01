@@ -70,9 +70,9 @@ get_inventory(Mac) ->
 
     InvetoryXml.
 
-refresh() ->
+refresh(Zone) ->
     RawData = util:os_cmd("bahost list states"),
-    Data = bahost_parser:process(RawData),
+    Data = bahost_parser:process(Zone, RawData),
     delta_keyvalue:analyze(tablename(), Data).
 
 get_state(Mac) ->

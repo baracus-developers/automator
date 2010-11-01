@@ -19,7 +19,7 @@ join_request(Host) ->
     ok.
 
 handle_event({baracus, add, Mac, Record}, State) ->
-    hosts_server:create(Mac),
+    hosts_server:create(Record#bahost.zone, Mac),
     {ok, State};
 handle_event({baracus, update, Mac, Old, New}, State) ->
     {ok, Id} = hosts_server:lookup({mac, Mac}),

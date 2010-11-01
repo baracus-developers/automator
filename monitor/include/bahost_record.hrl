@@ -1,2 +1,2 @@
 
--record(bahost, {mac, pxecurr, pxenext, state, active}).
+-record(bahost, {mac, zone, pxecurr, pxenext, state, active}).
