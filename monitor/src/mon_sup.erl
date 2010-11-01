@@ -21,6 +21,8 @@ init(Port) ->
 	    permanent, 5000, worker, dynamic},
 	   {config, {config, start_link, []},
             permanent, brutal_kill, worker, [config]},
+	   {services, {services, start_link, []},
+            permanent, brutal_kill, worker, [services]},
 	   {bahost_analyzer, {baracus_driver, start_link, []},
             permanent, brutal_kill, worker, [baracus_driver]},
 	   {bahost_mon, {bahost_mon, start_link, []},

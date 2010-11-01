@@ -16,8 +16,14 @@
 -record(dialog, {?ELEMENT_BASE(element_dialog), title, body}).
 
 % main panels
+-record(servicespanel, {?ELEMENT_BASE(element_servicespanel)}).
 -record(inventorypanel, {?ELEMENT_BASE(element_inventorypanel)}).
 -record(users, {?ELEMENT_BASE(element_users)}).
+
+% service subpanel
+-record(services, {?ELEMENT_BASE(element_services)}).
+-record(serviceelements, {?ELEMENT_BASE(element_serviceelements)}).
+-record(catalog, {?ELEMENT_BASE(element_catalog)}).
 
 % inventory subpanel
 -record(activeinventory, {?ELEMENT_BASE(element_activeinventory)}).

@@ -55,7 +55,7 @@ render_mainpanel(Id) ->
     comet_server:flush_jobs(),
 
     case Id of
-	"Services" -> #panel{};
+	"Services" -> #servicespanel{};
 	"Zones" -> #panel{};
 	"Inventory" -> #inventorypanel{};
 	"Alerts" -> #panel{};
