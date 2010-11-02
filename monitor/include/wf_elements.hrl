@@ -13,6 +13,8 @@
 			   panels, default, delegate, postback}).
 -record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data, selectable=false, delegate, postback}).
 
+-record(poollist, {?ELEMENT_BASE(element_poollist), hid=wf:temp_id()}).
+
 -record(dialog, {?ELEMENT_BASE(element_dialog), title, body}).
 
 % main panels
@@ -21,8 +23,8 @@
 -record(users, {?ELEMENT_BASE(element_users)}).
 
 % service subpanel
--record(services, {?ELEMENT_BASE(element_services)}).
--record(serviceelements, {?ELEMENT_BASE(element_serviceelements)}).
+-record(services, {?ELEMENT_BASE(element_services), delegate, postback}).
+-record(serviceelements, {?ELEMENT_BASE(element_serviceelements), name}).
 -record(catalog, {?ELEMENT_BASE(element_catalog)}).
 
 % inventory subpanel

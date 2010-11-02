@@ -312,3 +312,7 @@ div.inplace_textbox.label {
     margin-top: 1em;
 }
 
+.services {
+    float: left;
+    width: 200px;
+}

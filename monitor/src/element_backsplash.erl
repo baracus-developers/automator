@@ -7,7 +7,9 @@
 reflect() -> record_info(fields, backsplash).
 
 render_element(R) ->
-    Panel = #panel{ class="outer-backsplash",
+    Panel = #panel{ id=R#backsplash.id,
+		    anchor=R#backsplash.anchor,
+		    class=["outer-backsplash", R#backsplash.class],
 		    body=#panel{ class="inner-backsplash",
 				 body=R#backsplash.body
 			       }

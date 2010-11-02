@@ -8,6 +8,7 @@
 	 terminate/2, code_change/3]).
 
 -export([create/1, enum/0, delete/1]).
+-export([create_element/4, enum_elements/1, delete_element/1]).
 
 -record(state, {}).
 
@@ -22,6 +23,13 @@ init(_Args) ->
 			   record_info(fields, service)},
 			  {disc_copies, util:replicas()}
 			 ]),
+    ok = util:open_table(elements,
+			 [
+			  {record_name, element},
+			  {attributes,
+			   record_info(fields, element)},
+			  {disc_copies, util:replicas()}
+			 ]),
     {ok, #state{}}.
 
 enum() ->
@@ -33,10 +41,53 @@ create(Name) ->
 delete(Name) ->
     gen_server:call(?MODULE, {delete, Name}).
 
+create_element(Service, Type, Pools, Elasticity) ->
+    gen_server:call(?MODULE, {create_element, Service, Type, Pools, Elasticity}).
+
+enum_elements(Service) ->
+    gen_server:call(?MODULE, {enum_elements, Service}).
+
+delete_element(Id) ->
+    gen_server:call(?MODULE, {delete_element, Id}).
+
 handle_call(enum, _From, State) ->
     Services = util:atomic_query(qlc:q([Service#service.name ||
 					   Service <- mnesia:table(services)])),
     {reply, {ok, Services}, State};
+
+handle_call({enum_elements, Service}, _From, State) ->
+    try
+	Elements = util:atomic_query(qlc:q([E || E <- mnesia:table(elements),
+						 E#element.service == Service])),
+	{reply, {ok, Elements}, State}
+    catch
+	Type:Error ->
+	    {reply, {error, {Type, Error}}, State}
+    end;
+
+handle_call({create_element, Service, Type, Pools, Elasticity}, _From, State) ->
+    F = fun() ->
+		[_] = mnesia:read(services, Service, read),
+		Id = uuid:to_string(uuid:v4()),
+		Element = #element{id=Id,
+				   service=Service,
+				   type=Type,
+				   pools=Pools,
+				   elasticity=Elasticity
+				  },
+		mnesia:write(elements, Element, write)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, ok} ->
+	    {reply, ok, State};
+	Error ->
+	    {reply, {error, Error}, State}
+    end;
+
+handle_call({delete_element, Id}, _From, State) ->
+    F = fun() -> mnesia:delete(elements, Id, write) end,
+    {atomic, ok} = mnesia:transaction(F),
+    {reply, ok, State};
 
 handle_call({create, Name}, _From, State) ->
     F = fun() ->

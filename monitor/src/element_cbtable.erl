@@ -79,10 +79,8 @@ send(Index, State) ->
 
     case R#cbtable.postback of
 	undefined -> ok;
-	selected ->
-	    Module:event({selected, Index});
 	Postback ->
-	    Module:event(Postback)
+	    Module:event({Postback, Index})
     end.    
 
 event({row_clicked, Index, Id, State}) ->
