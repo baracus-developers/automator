@@ -24,6 +24,9 @@ render_table() ->
     Rows = [flatten(Service) || Service <- Services],
 
     #cbtable{class="services",
+	     delegate=?MODULE,
+	     postback=selected,
+	     selectable=true,
 	     data=Rows,
 	     map= [
 		   name@text,
@@ -97,6 +100,7 @@ event(service_save) ->
 event({service_delete, Service}) ->
     ok = services:delete(Service),
     wf:update("services-list", render_table());
+event({selected, Index}) ->
 event(_) ->
     ok.
 

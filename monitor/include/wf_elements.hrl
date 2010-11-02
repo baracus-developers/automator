@@ -11,7 +11,7 @@
 -record(backsplash, {?ELEMENT_BASE(element_backsplash), body}).
 -record(tabbedbacksplash, {?ELEMENT_BASE(element_tabbedbacksplash),
 			   panels, default, delegate, postback}).
--record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data}).
+-record(cbtable, {?ELEMENT_BASE(element_cbtable), header, rowspec, map, data, selectable=false, delegate, postback}).
 
 -record(dialog, {?ELEMENT_BASE(element_dialog), title, body}).
 

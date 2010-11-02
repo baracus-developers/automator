@@ -104,11 +104,18 @@ a:hover, a:active {
 .tablecell {
     padding-left: 5px;
     padding-right: 5px;
-    background-color: #fff;
+}
+
+.oddrow {
+    background-color: #fff
 }
 
 .evenrow {
     background-color: #f0f0f0;
+}
+
+.selectedrow {
+    background-color: #9ecae5;
 }
 
 .container_12 {
