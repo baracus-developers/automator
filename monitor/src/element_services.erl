@@ -101,6 +101,7 @@ event({service_delete, Service}) ->
     ok = services:delete(Service),
     wf:update("services-list", render_table());
 event({selected, Index}) ->
+    ok;
 event(_) ->
     ok.
 
