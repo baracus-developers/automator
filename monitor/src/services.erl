@@ -68,17 +68,19 @@ handle_call({enum_elements, Service}, _From, State) ->
 handle_call({create_element, Service, Type, Pools, Elasticity}, _From, State) ->
     F = fun() ->
 		[_] = mnesia:read(services, Service, read),
-		Id = uuid:to_string(uuid:v4()),
+		Id = list_to_atom(uuid:to_string(uuid:v4())),
 		Element = #element{id=Id,
 				   service=Service,
 				   type=Type,
 				   pools=Pools,
 				   elasticity=Elasticity
 				  },
-		mnesia:write(elements, Element, write)
+		mnesia:write(elements, Element, write),
+		{ok, Id}
 	end,
     case mnesia:transaction(F) of
-	{atomic, ok} ->
+	{atomic, {ok, Id}} ->
+	    ok = start_element(Id, Type, Pools, Elasticity),
 	    {reply, ok, State};
 	Error ->
 	    {reply, {error, Error}, State}
@@ -101,6 +103,7 @@ handle_call({create, Name}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, Result} ->
+	    
 	    {reply, Result, State};
 	Error ->
 	    {reply, {error, Error}, State}
@@ -136,3 +139,16 @@ terminate(Reason, State) ->
 
 code_change(OldVsn, State, Extra) ->
     {ok, State}.
+
+start_element(Id, Type, Pools, Elasticity) ->
+    StartFunc = {gen_fsm, start_link,
+		 [{local, Id}, service_element_fsm,
+		  {Id, Type, Pools, Elasticity}, []]},
+    {ok, _} = supervisor:start_child(services_sup,
+				     {Id,
+				      StartFunc,
+				      transient,
+				      brutal_kill,
+				      worker,
+				      [service_element_fsm]}),
+    ok.
