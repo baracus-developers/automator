@@ -30,8 +30,6 @@ $(EBINDIR)/$(NAME).app: $(NAME).app Makefile
 	@echo "Compiling (APPSPEC) $< to $@"
 	@cat $< | sed "s/__MODULES__/$(MODULES)/" | sed 's/\[, /\[/' | sed "s/__VSN__/$(VERSION).$(RELEASE)/" > $@ 
 
-$(OBJS): $(SRCS) Makefile
-
 $(OBJDIR):
 	@mkdir -p $(OBJDIR)
 
