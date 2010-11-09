@@ -71,7 +71,7 @@ render_element(R) ->
     element_panel:render_element(Panel).
 
 render_addelement(R) ->
-    Types = [franks, beans],
+    Types = ["KVM Hypervisor", "CEPH Storage", "NFS Storage"],
 
     [
      #panel{class="edititem",
