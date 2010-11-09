@@ -23,6 +23,7 @@ init({Id, Type, Pools, Elasticity}) ->
 
 acquire_inventory({inventory, Mac}, From, State) ->
     io:format("Mac: ~p acquired~n", [Mac]),
+    host_fsm:provision(Mac, default),
     {reply, true, acquire_inventory, State#state{has=State#state.has+1}}.    
 
 terminate(Reason, StateName, StateData) ->
