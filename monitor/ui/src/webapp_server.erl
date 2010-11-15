@@ -35,7 +35,7 @@ init([Port]) ->
 
     ok = yaws_security:register_userdetails(fun(Token) -> userdetails(Token) end),
 
-    PrivDir = code:priv_dir(cloudbuilder),
+    PrivDir = code:priv_dir(cloudbuilder_ui),
 
     GC = yaws_config:make_default_gconf(false, "webapp"),
     SC = #sconf{

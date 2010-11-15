@@ -1,12 +1,12 @@
 -module(mon_sup).
 -behavior(supervisor).
--export([start_link/1]).
+-export([start_link/0]).
 -export([init/1]).
 
-start_link(Port) ->
-    supervisor:start_link({local, mon_sup}, mon_sup, [Port]).
+start_link() ->
+    supervisor:start_link({local, mon_sup}, mon_sup, []).
 
-init(Port) ->
+init(_Args) ->
     {ok, {{one_for_one, 1, 60},
           [{agentmon, {agentmon, start_link, []},
             permanent, brutal_kill, worker, [agentmon]},
@@ -34,11 +34,5 @@ init(Port) ->
 	   {puppetca_mon, {puppetca_mon, start_link, []},
             permanent, brutal_kill, worker, [puppetca_mon]},
 	   {hosts_sup, {hosts_sup, start_link, []},
-            permanent, brutal_kill, supervisor, [hosts_sup]},
-%	   {api_server,
-%	    {api_server, start_link, [Port]},
-%	    permanent, 5000, worker, [api_server]},
-	   {webapp_server,
-	    {webapp_server, start_link, [Port]},
-	    permanent, 5000, worker, [webapp_server]}
+            permanent, brutal_kill, supervisor, [hosts_sup]}
 	  ]}}.
