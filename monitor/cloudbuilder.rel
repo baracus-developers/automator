@@ -19,6 +19,8 @@
   {syntax_tools, "1.6.6"},
   {compiler, "4.7.1"},
   {nitrogen, "2.0.3"},
+  {procket, "0.01"},
+  {cloudbuilder_dhcp, "1.0.1"},
   {cloudbuilder_core, "__VSN__"},
   {cloudbuilder_ui, "__VSN__"}
 ]}.
