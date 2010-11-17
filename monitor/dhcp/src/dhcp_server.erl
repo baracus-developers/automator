@@ -10,7 +10,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3]).
+-export([start_link/4]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -22,7 +22,7 @@
 -define(DHCP_SERVER_PORT, 67).
 -define(DHCP_CLIENT_PORT, 68).
 
--record(state, {socket, server_id, next_server}).
+-record(state, {socket, server_id, next_server, bootfile}).
 
 %%====================================================================
 %% API
@@ -31,9 +31,9 @@
 %% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-start_link(ServerId, NextServer, LogFile) ->
+start_link(ServerId, NextServer, BootFile, LogFile) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE,
-			  [ServerId, NextServer, LogFile], []).
+			  [ServerId, NextServer, BootFile, LogFile], []).
 
 %%====================================================================
 %% gen_server callbacks
@@ -46,7 +46,7 @@ start_link(ServerId, NextServer, LogFile) ->
 %%                         {stop, Reason}
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
-init([ServerId, NextServer, LogFile]) ->
+init([ServerId, NextServer, BootFile, LogFile]) ->
     error_logger:logfile({open, LogFile}),
     Port = ?DHCP_SERVER_PORT,
     {ok, SockFD} = procket:listen(Port, [{protocol, udp}, {type, dgram},
@@ -57,7 +57,8 @@ init([ServerId, NextServer, LogFile]) ->
 	    error_logger:info_msg("Starting DHCP server..."),
 	    {ok, #state{socket = Socket,
 			server_id = ServerId,
-			next_server = NextServer}};
+			next_server = NextServer,
+			bootfile = BootFile}};
 	{error, Reason} ->
 	    error_logger:error_msg("Cannot open udp port ~w",
 				   [?DHCP_SERVER_PORT]),
@@ -232,6 +233,7 @@ send_offer(S, Socket, D, IP, Options) ->
 		  ciaddr = {0, 0, 0, 0},
 		  yiaddr = IP,
 		  siaddr = S#state.next_server,
+		  file = S#state.bootfile,
 		  options = [{?DHO_DHCP_MESSAGE_TYPE, ?DHCPOFFER},
 			     {?DHO_DHCP_SERVER_IDENTIFIER, S#state.server_id} |
 			     Options]},
@@ -248,6 +250,7 @@ send_ack(S, Socket, D, IP, Options) ->
 		secs = 0,
 		yiaddr = IP,
 		siaddr = S#state.next_server,
+		file = S#state.bootfile,
 		options = [{?DHO_DHCP_MESSAGE_TYPE, ?DHCPACK},
 			   {?DHO_DHCP_SERVER_IDENTIFIER, S#state.server_id} |
 			   Options]},

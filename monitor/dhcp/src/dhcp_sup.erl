@@ -47,9 +47,9 @@ start_link() ->
 %%--------------------------------------------------------------------
 init([]) ->
     case get_config() of
-        {ok, ServerId, NextServer, LogFile, LeaseFile, Subnets, Hosts} ->
+        {ok, ServerId, NextServer, BootFile, LogFile, LeaseFile, Subnets, Hosts} ->
             DHCPServer = {dhcp_server, {dhcp_server, start_link,
-                                        [ServerId, NextServer, LogFile]},
+                                        [ServerId, NextServer, BootFile, LogFile]},
                           permanent, 2000, worker, [dhcp_server]},
             DHCPAlloc = {dhcp_alloc, {dhcp_alloc, start_link,
                                       [LeaseFile, Subnets, Hosts]},
@@ -73,6 +73,10 @@ get_config() ->
                              {value, {_, Next}} -> Next;
                              false -> {0, 0, 0, 0}
                          end,
+            BootFile = case keysearch(bootfile, 1, Terms) of
+                             {value, {_, Boot}} -> Boot;
+                             false -> ""
+                         end,
             LogFile = case keysearch(logfile, 1, Terms) of
                           {value, {_, Log}} -> Log;
                           false -> ?DHCP_LOGFILE
@@ -87,7 +91,7 @@ get_config() ->
             Hosts = filter(fun(#host{}) -> true;
                               (_) -> false
                            end, Terms),
-            {ok, ServerId, NextServer, LogFile, LeaseFile, Subnets, Hosts};
+            {ok, ServerId, NextServer, BootFile, LogFile, LeaseFile, Subnets, Hosts};
         {error, Reason} ->
 	    {error, Reason}
     end.
