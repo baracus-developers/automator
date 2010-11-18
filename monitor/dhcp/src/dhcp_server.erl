@@ -1,12 +1,8 @@
 %%%-------------------------------------------------------------------
-%%% File    : dhcp_server.erl
-%%% Author  : Ruslan Babayev <ruslan@babayev.com>
-%%% Description : DHCP server
-%%%
-%%% Created : 20 Sep 2006 by Ruslan Babayev <ruslan@babayev.com>
+%%% Based on dhcp_server.erl, by Ruslan Babayev <ruslan@babayev.com>
 %%%-------------------------------------------------------------------
 -module(dhcp_server).
-
+-include_lib("epcap/include/epcap_net.hrl").
 -behaviour(gen_server).
 
 %% API
@@ -21,8 +17,12 @@
 -define(SERVER, ?MODULE).
 -define(DHCP_SERVER_PORT, 67).
 -define(DHCP_CLIENT_PORT, 68).
+-define(ETHER_BROADCAST, {255,255,255,255,255,255}). 
+-define(IPV4HDRLEN, 20).
+-define(UDPHDRLEN, 8).
 
--record(state, {socket, server_id, next_server, bootfile}).
+-record(state, {rxsocket, txsocket, mac, ifindex,
+		server_id, next_server, bootfile}).
 
 %%====================================================================
 %% API
@@ -48,14 +48,20 @@ start_link(ServerId, NextServer, BootFile, LogFile) ->
 %%--------------------------------------------------------------------
 init([ServerId, NextServer, BootFile, LogFile]) ->
     error_logger:logfile({open, LogFile}),
+    Intf = "virbr0",
     Port = ?DHCP_SERVER_PORT,
-    {ok, SockFD} = procket:listen(Port, [{protocol, udp}, {type, dgram},
-                                         {interface, "virbr0"}]),
-    Options = [binary, {broadcast, true}, {fd, SockFD}],
+
+    {ok, RxSockFD} = procket:listen(Port, [{protocol, udp}, {type, dgram},
+                                         {interface, Intf}]),
+    {ok, TxSocket} = packet:socket(),
+    Options = [binary, {broadcast, true}, {fd, RxSockFD}],
     case gen_udp:open(Port, Options) of
-	{ok, Socket} ->
+	{ok, RxSocket} ->
 	    error_logger:info_msg("Starting DHCP server..."),
-	    {ok, #state{socket = Socket,
+	    {ok, #state{rxsocket = RxSocket,
+			txsocket = TxSocket,
+			mac = packet:macaddress(RxSockFD, Intf), 
+			ifindex = packet:ifindex(RxSockFD, Intf),
 			server_id = ServerId,
 			next_server = NextServer,
 			bootfile = BootFile}};
@@ -93,11 +99,11 @@ handle_cast(_Msg, State) ->
 %%                                       {stop, Reason, State}
 %% Description: Handling all non call/cast messages
 %%--------------------------------------------------------------------
-handle_info({udp, Socket, _IP, _Port, Packet}, State) ->
+handle_info({udp, _Socket, _IP, _Port, Packet}, State) ->
     DHCP = dhcp_lib:decode(Packet),
     case optsearch(?DHO_DHCP_MESSAGE_TYPE, DHCP) of
 	{value, MsgType} ->
-	    handle_dhcp(MsgType, DHCP, Socket, State);
+	    handle_dhcp(MsgType, DHCP, State);
 	false ->
 	    ok
     end,
@@ -114,7 +120,8 @@ handle_info(_Info, State) ->
 %%--------------------------------------------------------------------
 terminate(_Reason, State) ->
     error_logger:logfile(close),
-    gen_udp:close(State#state.socket),
+    gen_udp:close(State#state.rxsocket),
+    procket:close(State#state.txsocket),
     ok.
 
 %%--------------------------------------------------------------------
@@ -131,7 +138,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%%-------------------------------------------------------------------
 %%% The DHCP message handler
 %%%-------------------------------------------------------------------
-handle_dhcp(?DHCPDISCOVER, D, Socket, State) ->
+handle_dhcp(?DHCPDISCOVER, D, State) ->
     error_logger:info_msg("DHCPDISCOVER from ~s ~s ~s",
 			  [fmt_clientid(D), fmt_hostname(D), fmt_gateway(D)]),
     ClientId = get_client_id(D),
@@ -139,11 +146,11 @@ handle_dhcp(?DHCPDISCOVER, D, Socket, State) ->
     RequestedIP = get_requested_ip(D),
     case dhcp_alloc:reserve(ClientId, Gateway, RequestedIP) of
 	{ok, IP, Options} ->
-	    send_offer(State, Socket, D, IP, Options);
+	    send_offer(State, D, IP, Options);
 	{error, Reason} ->
 	    error_logger:error_msg(Reason)
     end;
-handle_dhcp(?DHCPREQUEST, D, Socket, State) ->
+handle_dhcp(?DHCPREQUEST, D, State) ->
     ClientId = get_client_id(D),
     error_logger:info_msg("DHCPREQUEST from ~s ~s ~s",
 			  [fmt_clientid(D), fmt_hostname(D), fmt_gateway(D)]),
@@ -154,7 +161,7 @@ handle_dhcp(?DHCPREQUEST, D, Socket, State) ->
 		    IP = get_requested_ip(D),
 		    case dhcp_alloc:allocate(ClientId, IP) of
 			{ok, IP, Options} ->
-			    send_ack(State, Socket, D, IP, Options);
+			    send_ack(State, D, IP, Options);
 			{error, Reason} ->
 			    error_logger:error_msg(Reason)
 		    end;
@@ -166,33 +173,33 @@ handle_dhcp(?DHCPREQUEST, D, Socket, State) ->
 	    Gateway = D#dhcp.giaddr,
 	    case dhcp_alloc:verify(ClientId, Gateway, RequestedIP) of
 		{ok, IP, Options} ->
-		    send_ack(State, Socket, D, IP, Options);
+		    send_ack(State, D, IP, Options);
 		noclient ->
 		    error_logger:error_msg("Client ~s has no current bindings",
 					   [fmt_clientid(D)]);
 		{error, Reason} ->
-		    send_nak(State, Socket, D, Reason)
+		    send_nak(State, D, Reason)
 	    end;
 	{ClientIs, IP} when ClientIs == renewing; ClientIs == rebinding ->
 	    case dhcp_alloc:extend(ClientId, IP) of
 		{ok, IP, Options} ->
-		    send_ack(State, Socket, D, IP, Options);
+		    send_ack(State, D, IP, Options);
 		{error, Reason} ->
-		    send_nak(State, Socket, D, Reason)
+		    send_nak(State, D, Reason)
 	    end
     end;
-handle_dhcp(?DHCPDECLINE, D, _Socket, _State) ->
+handle_dhcp(?DHCPDECLINE, D, _State) ->
     IP = get_requested_ip(D),
     error_logger:info_msg("DHCPDECLINE of ~s from ~s ~s",
 			  [fmt_ip(IP), fmt_clientid(D), fmt_hostname(D)]),
     dhcp_alloc:decline(IP);
-handle_dhcp(?DHCPRELEASE, D, _Socket, _State) ->
+handle_dhcp(?DHCPRELEASE, D, _State) ->
     ClientId = get_client_id(D),
     error_logger:info_msg("DHCPRELEASE of ~s from ~s ~s ~s",
 			  [fmt_ip(D#dhcp.ciaddr), fmt_clientid(D),
 			   fmt_hostname(D), fmt_gateway(D)]),
     dhcp_alloc:release(ClientId, D#dhcp.ciaddr);
-handle_dhcp(?DHCPINFORM, D, Socket, State) ->
+handle_dhcp(?DHCPINFORM, D, State) ->
     Gateway = D#dhcp.giaddr,
     IP = D#dhcp.ciaddr,
     error_logger:info_msg("DHCPINFORM from ~s", [fmt_ip(IP)]), 
@@ -200,11 +207,11 @@ handle_dhcp(?DHCPINFORM, D, Socket, State) ->
 	{ok, Opts} ->
 	    %% No Lease Time (RFC2131 sec. 4.3.5)
 	    OptsSansLease = lists:keydelete(?DHO_DHCP_LEASE_TIME, 1, Opts),
-	    send_ack(State, Socket, D, IP, OptsSansLease);
+	    send_ack(State, D, IP, OptsSansLease);
 	{error, Reason} ->
 	    error_logger:error_msg(Reason)
     end;
-handle_dhcp(MsgType, _D, _Socket, _State) ->
+handle_dhcp(MsgType, _D, _State) ->
     error_logger:error_msg("Invalid DHCP message type ~p", [MsgType]).
 
 client_state(D) when is_record(D, dhcp) ->
@@ -225,7 +232,7 @@ client_state(D) when is_record(D, dhcp) ->
 	    end
     end.
 
-send_offer(S, Socket, D, IP, Options) ->
+send_offer(S, D, IP, Options) ->
     DHCPOffer = D#dhcp{
 		  op = ?BOOTREPLY,
 		  hops = 0,
@@ -240,10 +247,9 @@ send_offer(S, Socket, D, IP, Options) ->
     error_logger:info_msg("DHCPOFFER on ~s to ~s ~s ~s",
 			  [fmt_ip(IP), fmt_clientid(D),
 			   fmt_hostname(D), fmt_gateway(D)]),
-    {ActualIP, Port} = get_dest(DHCPOffer),
-    ok = gen_udp:send(Socket, {255,255,255,255}, Port, dhcp_lib:encode(DHCPOffer)).  
+    send_dhcp(S, DHCPOffer).
 
-send_ack(S, Socket, D, IP, Options) ->
+send_ack(S, D, IP, Options) ->
     DHCPAck = D#dhcp{
 		op = ?BOOTREPLY,
 		hops = 0,
@@ -257,10 +263,9 @@ send_ack(S, Socket, D, IP, Options) ->
     error_logger:info_msg("DHCPACK on ~s to ~s ~s ~s",
 			  [fmt_ip(IP), fmt_clientid(D),
 			   fmt_hostname(D), fmt_gateway(D)]),
-    {IP, Port} = get_dest(DHCPAck),
-    ok = gen_udp:send(Socket, {255,255,255,255}, Port, dhcp_lib:encode(DHCPAck)).
+    send_dhcp(S, DHCPAck).
 
-send_nak(S, Socket, D, Reason) ->
+send_nak(S, D, Reason) ->
     DHCPNak = D#dhcp{
 		op = ?BOOTREPLY,
 		hops = 0,
@@ -275,8 +280,36 @@ send_nak(S, Socket, D, Reason) ->
     error_logger:info_msg("DHCPNAK to ~s ~s ~s. ~s",
 			  [fmt_clientid(D), fmt_hostname(D),
 			   fmt_gateway(D), Reason]),
-    {IP, Port} = get_dest(D),
-    ok = gen_udp:send(Socket, IP, Port, dhcp_lib:encode(DHCPNak)).
+    send_dhcp(S, DHCPNak).
+
+send_dhcp(S, D) ->
+    {TargetAddr, DPort} = get_dest(D),
+
+    {DMac, DAddr} = case TargetAddr of
+		    broadcast -> {?ETHER_BROADCAST, {255,255,255,255}};
+		    _ -> {D#dhcp.chaddr, TargetAddr}
+		 end,
+
+    Payload = dhcp_lib:encode(D),
+    UDP = #udp{sport=?DHCP_SERVER_PORT,
+	       dport=DPort,
+	       ulen=size(Payload)+?UDPHDRLEN
+	      },
+    IP = #ipv4{saddr=S#state.server_id,
+	       daddr=DAddr,
+	       p=?IPPROTO_UDP,
+	       len=UDP#udp.ulen+?IPV4HDRLEN
+	      },
+
+    UdpChecksum = epcap_net:makesum([IP, UDP, Payload]),
+    EncodedUDP = epcap_net:udp(UDP#udp{sum=UdpChecksum}),
+    EncodedIP = epcap_net:ipv4(IP#ipv4{sum=epcap_net:makesum(IP)}),
+    Ether = epcap_net:ether(#ether{dhost=mac_to_binary(DMac),
+				   shost=mac_to_binary(S#state.mac),
+				   type=?ETH_P_IP}),
+
+    packet:send(S#state.txsocket, S#state.ifindex,
+		list_to_binary([Ether, EncodedIP, EncodedUDP, Payload])).
 
 %%% Behaviour is described in RFC2131 sec. 4.1
 get_dest(D) when is_record(D, dhcp) ->
@@ -285,7 +318,7 @@ get_dest(D) when is_record(D, dhcp) ->
 		 case D#dhcp.ciaddr of
 		     {0, 0, 0, 0} ->
 			 case is_broadcast(D) of
-			     true -> {255, 255, 255, 255};
+			     true -> broadcast;
 			     _    -> D#dhcp.yiaddr
 			 end;
 		     CiAddr -> CiAddr
@@ -350,4 +383,7 @@ fmt_hostname(D) when is_record(D, dhcp) ->
 
 fmt_ip({A1, A2, A3, A4}) ->
     io_lib:format("~w.~w.~w.~w", [A1, A2, A3, A4]).
+
+mac_to_binary({M1, M2, M3, M4, M5, M6}) ->
+    <<M1, M2, M3, M4, M5, M6>>.
 
