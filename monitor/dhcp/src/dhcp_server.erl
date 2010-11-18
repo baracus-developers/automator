@@ -48,7 +48,7 @@ start_link(ServerId, NextServer, BootFile, LogFile) ->
 %%--------------------------------------------------------------------
 init([ServerId, NextServer, BootFile, LogFile]) ->
     error_logger:logfile({open, LogFile}),
-    Intf = "virbr0",
+    Intf = compute_intf(ServerId),
     Port = ?DHCP_SERVER_PORT,
 
     {ok, RxSockFD} = procket:listen(Port, [{protocol, udp}, {type, dgram},
@@ -387,3 +387,15 @@ fmt_ip({A1, A2, A3, A4}) ->
 mac_to_binary({M1, M2, M3, M4, M5, M6}) ->
     <<M1, M2, M3, M4, M5, M6>>.
 
+compute_intf(ServerId) ->
+    {ok, Intfs} = inet:getiflist(),
+    F = fun(Intf) ->
+		{ok, [{addr, Addr}]} = inet:ifget(Intf, [addr]),
+		Addr
+	end,
+    Addrs = dict:from_list([{F(Intf), Intf} || Intf <- Intfs]),
+    case dict:find(ServerId, Addrs) of
+	{ok, Intf} -> Intf;
+	_ -> throw({nomatch, ServerId})
+    end.
+	     
