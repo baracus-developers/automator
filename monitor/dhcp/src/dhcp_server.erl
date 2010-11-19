@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/4]).
+-export([start_link/3]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -31,9 +31,9 @@
 %% Function: start_link() -> {ok,Pid} | ignore | {error,Error}
 %% Description: Starts the server
 %%--------------------------------------------------------------------
-start_link(ServerId, NextServer, BootFile, LogFile) ->
+start_link(ServerId, NextServer, BootFile) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE,
-			  [ServerId, NextServer, BootFile, LogFile], []).
+			  [ServerId, NextServer, BootFile], []).
 
 %%====================================================================
 %% gen_server callbacks
@@ -46,8 +46,7 @@ start_link(ServerId, NextServer, BootFile, LogFile) ->
 %%                         {stop, Reason}
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
-init([ServerId, NextServer, BootFile, LogFile]) ->
-    error_logger:logfile({open, LogFile}),
+init([ServerId, NextServer, BootFile]) ->
     Intf = compute_intf(ServerId),
     Port = ?DHCP_SERVER_PORT,
 
