@@ -1,0 +1,24 @@
+#!/usr/bin/env escript
+-include_lib("xmerl/include/xmerl.hrl").
+
+main(_Args) ->
+    net_kernel:start([shell]),
+
+    {Xml, _} = xmerl_scan:file("/etc/cloudbuilder.conf"),
+    [#xmlText{value=Cookie}] = xmerl_xpath:string("//cookie/text()", Xml),
+    erlang:set_cookie(node(), list_to_atom(Cookie)),
+
+    Target = list_to_atom("cloudbuilderd@" ++ net_adm:localhost()),
+    io:format("Connecting to ~p~n", [Target]),
+    true = net_kernel:connect_node(Target),
+    
+    rpc:call(Target, shell, start, []),
+    
+    loop().
+
+loop() ->
+    timer:sleep(10000000),
+    loop().
+
+
+

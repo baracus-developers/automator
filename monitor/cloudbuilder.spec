@@ -1,6 +1,6 @@
 %define rpmrel _RPM_RELEASE
 %define conf cloudbuilder.conf.example
-%define rootdir %{_bindir}/%{name}
+%define rootdir %{_libdir}/%{name}
 %define homedir %{_localstatedir}/lib/%{name}
 %define logdir %{_localstatedir}/log/%{name}
 
@@ -29,9 +29,11 @@ Authors
 make RELEASE=%{release}
 
 %install
-make install INSTPATH=$RPM_BUILD_ROOT%{_bindir}/%{name} RELEASE=%{release}
+make install INSTPATH=$RPM_BUILD_ROOT%{rootdir} RELEASE=%{release}
 mkdir -p $RPM_BUILD_ROOT/%{homedir}/resolvers
 mkdir -p $RPM_BUILD_ROOT/%{logdir}
+mkdir -p $RPM_BUILD_ROOT/%{_bindir}
+install -m 755 cloudbuilder-shell $RPM_BUILD_ROOT/%{_bindir}
 
 mkdir -p $RPM_BUILD_ROOT/etc
 uuid=$(uuidgen)
@@ -54,5 +56,6 @@ make clean
 %{logdir}
 /etc/%{conf}
 /etc/init.d/cloudbuilderd
+%{_bindir}/cloudbuilder-shell
 
 %changelog
