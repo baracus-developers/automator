@@ -1,15 +1,38 @@
 #!/usr/bin/env escript
 -include_lib("xmerl/include/xmerl.hrl").
 
-main(_Args) ->
-    net_kernel:start([shell]),
-
+get_cookie() ->
     {Xml, _} = xmerl_scan:file("/etc/cloudbuilder.conf"),
     [#xmlText{value=Cookie}] = xmerl_xpath:string("//cookie/text()", Xml),
-    erlang:set_cookie(node(), list_to_atom(Cookie)),
+    Cookie.
 
-    Target = list_to_atom("cloudbuilderd@" ++ net_adm:localhost()),
-    io:format("Connecting to ~p~n", [Target]),
+main(Params) ->
+    net_kernel:start([shell]),
+
+    io:format("Params: ~p~n", [Params]),
+
+    F = fun(Param) ->
+		case string:tokens(Param, "=") of
+		    [Lhs, Rhs] -> {Lhs, Rhs};
+		    Token -> throw({bad_token, Token})
+		end
+	end,
+    PL = [F(Param) || Param <- Params],
+
+    Cookie = case proplists:lookup("cookie", PL) of
+		 {_, C} -> C;
+		 _ -> get_cookie()
+	     end,
+    erlang:set_cookie(node(), list_to_atom(Cookie)),
+    
+    Host = case proplists:lookup("host", PL) of
+	       {_, H} -> H;
+	       _ -> net_adm:localhost()
+	   end,
+    Target = list_to_atom( "cloudbuilderd@" ++ Host),
+
+    io:format("Connecting to ~p with cookie ~s~n", [Target, Cookie]),
+
     true = net_kernel:connect_node(Target),
     
     shell:start(),
