@@ -12,7 +12,7 @@ main(_Args) ->
     io:format("Connecting to ~p~n", [Target]),
     true = net_kernel:connect_node(Target),
     
-    rpc:call(Target, shell, start, []),
+    shell:start(),
     
     loop().
 
