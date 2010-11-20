@@ -106,9 +106,28 @@ init([LeaseFile, Subnets, Hosts]) ->
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
 handle_call({reserve, ClientId, Gateway, IP}, _From, State) ->
+    Now = calendar:datetime_to_gregorian_seconds({date(), time()}),
     case select_subnet(Gateway, State#state.subnets) of
 	{ok, Subnet} ->
-	    case select_address(ClientId, IP, Subnet) of
+	    Lease = case dets:lookup(?LEASE, ClientId) of
+			[L] ->
+			    case {?IS_NOT_EXPIRED(L, Now),
+				  belongs_to_subnet(L#lease.ip, Subnet)
+				 } of
+				{_, false} ->
+				    release_address(ClientId, L#lease.ip),
+				    none;
+				{false, true} ->
+				    case ets:lookup(?ADDRESS, L#lease.ip) of
+					[A] when ?IS_AVAILABLE(A) ->
+					    L#lease.ip;
+					_ -> none
+				    end;
+				{true, true} -> L#lease.ip
+			    end;
+			_ -> none
+		    end,
+	    case select_address(ClientId, Lease, IP, Subnet) of
 		{ok, Address} ->
 		    {reply, reserve_address(Address, ClientId), State};
 		{error, Reason} ->
@@ -220,7 +239,7 @@ ip_to_int(IP) ->
 int_to_ip(Int) ->
     list_to_tuple(binary_to_list(<<Int:32>>)).
 
-select_address(_ClientId, {0, 0, 0, 0}, S) ->
+find_free_address(S) ->
     F = fun(A, false) when ?IS_AVAILABLE(A) ->
 		case belongs_to_subnet(A#address.ip, S) of
 		    true  -> A;
@@ -231,36 +250,25 @@ select_address(_ClientId, {0, 0, 0, 0}, S) ->
     case ets:foldl(F, false, ?ADDRESS) of
 	false -> {error, "No available addresses in this subnet."};
 	A     -> {ok, A#address{options = S#subnet.options}}
-    end;
-select_address(ClientId, IP, S) ->
-    Options = S#subnet.options,
-    Now = calendar:datetime_to_gregorian_seconds({date(), time()}),
-    case belongs_to_subnet(IP, S) of
-	true ->
-	    case dets:lookup(?LEASE, ClientId) of
-		[L] when ?IS_NOT_EXPIRED(L, Now) ->
-		    {ok, #address{ip = L#lease.ip, options = Options}};
-		[L] ->
-		    case ets:lookup(?ADDRESS, L#lease.ip) of
-			[A] when ?IS_AVAILABLE(A) ->
-			    {ok, A#address{options = Options}};
-			_ ->
-			    dets:delete(?LEASE, ClientId),
-			    select_address(ClientId, IP, S)
-		    end;
-		[] ->
-		    case ets:lookup(?ADDRESS, IP) of
-			[A] when ?IS_AVAILABLE(A) ->
-			    {ok, A#address{options = Options}};
-			[A] when ?IS_OFFERED(A) ->
-			    {error, "Already offered"};
-			_ ->
-			    select_address(ClientId, {0,0,0,0}, S)
-		    end
-	    end;
-	false ->
-	    select_address(ClientId, {0,0,0,0}, S)
     end.
+
+select_address(_ClientId, {0, 0, 0, 0}, {0, 0, 0, 0}, S) ->
+    find_free_address(S);
+select_address(_ClientId, none, {0, 0, 0, 0}, S) ->
+    find_free_address(S);
+select_address(_ClientId, LeaseIP, RequestIP, S)
+  when LeaseIP =:= RequestIP;
+       RequestIP =:= {0, 0, 0, 0} ->
+    {ok, #address{ip=LeaseIP, options=S#subnet.options}};
+select_address(_ClientId, none, IP, S) ->
+    case {belongs_to_subnet(IP, S), ets:lookup(?ADDRESS, IP)} of
+	{true, [A]} when ?IS_AVAILABLE(A) ->
+	    {ok, A#address{options=S#subnet.options}};
+	_ -> find_free_address(S)
+    end;
+select_address(ClientId, LeaseIP, RequestIP, S) ->
+    release_address(ClientId, LeaseIP),
+    select_address(ClientId, none, RequestIP, S).
 
 verify_address(ClientId, IP, S) ->
     case belongs_to_subnet(IP, S) of
