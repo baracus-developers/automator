@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3]).
+-export([start_link/3, add_client/2, remove_client/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -20,6 +20,8 @@
 -define(ETHER_BROADCAST, {255,255,255,255,255,255}). 
 -define(IPV4HDRLEN, 20).
 -define(UDPHDRLEN, 8).
+
+-record(client, {mac, options}).
 
 -record(state, {rxsocket, txsocket, mac, ifindex,
 		server_id, next_server, bootfile}).
@@ -35,6 +37,12 @@ start_link(ServerId, NextServer, BootFile) ->
     gen_server:start_link({local, ?SERVER}, ?MODULE,
 			  [ServerId, NextServer, BootFile], []).
 
+add_client(Mac, Options) ->
+    gen_server:call(?SERVER, {add_client, Mac, Options}).
+
+remove_client(Mac) ->
+    gen_server:call(?SERVER, {remove_client, Mac}).
+
 %%====================================================================
 %% gen_server callbacks
 %%====================================================================
@@ -49,6 +57,14 @@ start_link(ServerId, NextServer, BootFile) ->
 init([ServerId, NextServer, BootFile]) ->
     Intf = compute_intf(ServerId),
     Port = ?DHCP_SERVER_PORT,
+
+    ok = util:open_table(dhcpclients,
+			 [
+			  {record_name, client},
+			  {attributes,
+			   record_info(fields, client)},
+			  {disc_copies, util:replicas()}
+			 ]),
 
     {ok, RxSockFD} = procket:listen(Port, [{protocol, udp}, {type, dgram},
                                          {interface, Intf}]),
@@ -79,6 +95,27 @@ init([ServerId, NextServer, BootFile]) ->
 %%                                      {stop, Reason, State}
 %% Description: Handling call messages
 %%--------------------------------------------------------------------
+handle_call({add_client, Mac, Options}, _From, State) ->
+    F = fun() ->
+		Client = #client{mac=Mac, options=Options},
+		mnesia:write(dhcpclients, Client, write)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, ok} ->
+	    {reply, ok, State};
+	Error ->
+	    {reply, {error, Error}, State}
+    end;
+handle_call({remove_client, Mac}, _From, State) ->
+    F = fun() ->
+		mnesia:delete(dhcpclients, Mac, write)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, ok} ->
+	    {reply, ok, State};
+	Error ->
+	    {reply, {error, Error}, State}
+    end;
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -242,7 +279,7 @@ send_offer(S, D, IP, Options) ->
 		  file = S#state.bootfile,
 		  options = [{?DHO_DHCP_MESSAGE_TYPE, ?DHCPOFFER},
 			     {?DHO_DHCP_SERVER_IDENTIFIER, S#state.server_id} |
-			     Options]},
+			     resolve_client_options(S, D#dhcp.chaddr, Options)]},
     error_logger:info_msg("DHCPOFFER on ~s to ~s ~s ~s",
 			  [fmt_ip(IP), fmt_clientid(D),
 			   fmt_hostname(D), fmt_gateway(D)]),
@@ -258,7 +295,7 @@ send_ack(S, D, IP, Options) ->
 		file = S#state.bootfile,
 		options = [{?DHO_DHCP_MESSAGE_TYPE, ?DHCPACK},
 			   {?DHO_DHCP_SERVER_IDENTIFIER, S#state.server_id} |
-			   Options]},
+			   resolve_client_options(S, D#dhcp.chaddr, Options)]},
     error_logger:info_msg("DHCPACK on ~s to ~s ~s ~s",
 			  [fmt_ip(IP), fmt_clientid(D),
 			   fmt_hostname(D), fmt_gateway(D)]),
@@ -332,6 +369,21 @@ get_dest(D) when is_record(D, dhcp) ->
 
 is_broadcast(D) when is_record(D, dhcp) ->
     (D#dhcp.flags bsr 15) == 1.
+
+resolve_client_options(S, Mac, Options) ->
+    SMac = fmt_clientid(Mac),
+    F = fun() ->
+		mnesia:read(dhcpclients, SMac, read)
+	end,
+    case mnesia:transaction(F) of
+	{atomic, [Client]} ->
+	    UpdatedOptions = dict:merge(fun(_K, _V1, V2) -> V2 end,
+					dict:from_list(Options),
+					dict:from_list(Client#client.options)),
+	    dict:to_list(UpdatedOptions);
+	_ ->
+	    Options
+    end.
 
 optsearch(Option, D) when is_record(D, dhcp) ->
     case lists:keysearch(Option, 1, D#dhcp.options) of

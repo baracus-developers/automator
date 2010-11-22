@@ -33,18 +33,10 @@ lookup(Host) ->
 enum() ->
     gen_server:call(?MODULE, enum).
 
-enum_i() ->
-    do(qlc:q([X#machine.hostname || X <- mnesia:table(machines)])).
-
-do(Q) ->
-    F = fun() -> qlc:e(Q) end,
-    {atomic, Val} = mnesia:transaction(F),
-    Val.
-
-create_fsm(Host) ->
+create_fsm(Mac, Host) ->
     Id = host2id(Host),
     StartFunc = {gen_fsm, start_link,
-		 [{local, Id}, machine_fsm, [Id, Host], []]},
+		 [{local, Id}, machine_fsm, [Id, Mac, Host], []]},
     supervisor:start_child(hosts_sup,
 			   {Id,
 			    StartFunc,
@@ -72,7 +64,7 @@ handle_call({create, Hostname, Mac}, _From, State) ->
 	end,
     case mnesia:transaction(F) of
 	{atomic, {created, _Record}} ->
-	    {ok, Id} = create_fsm(Hostname),
+	    {ok, Id} = create_fsm(Mac, Hostname),
 	    {reply, {ok, Id}, State};
 	{atomic, exists} ->
 	    {reply, exists, State}
@@ -88,14 +80,17 @@ handle_call({lookup, Host}, _From, State) ->
 	    {reply, {ok, host2id(Host)}, State}
     end;
 handle_call(enum, _From, State) ->
-    Machines = enum_i(),
+    Query = qlc:q([X#machine.hostname || X <- mnesia:table(machines)]),
+    Machines = util:atomic_query(Query),
     {reply, {ok, Machines}, State};
 handle_call(Request, From, State) ->
     {stop, {unexpected_call, Request}, State}.
 
 handle_cast(initialize, State=#state{initialized = false}) ->
-    Hosts = enum_i(),
-    [create_fsm(Mac) || Mac <- Hosts],
+    Query = qlc:q([{X#machine.mac, X#machine.hostname}
+		   || X <- mnesia:table(machines)]),
+    Machines = util:atomic_query(Query),
+    [create_fsm(Mac, Hostname) || {Mac, Hostname} <- Machines],
     {noreply, State#state{initialized = true}};
 handle_cast(Request, State) ->
     {stop, {unexpected_cast, Request}, State}.

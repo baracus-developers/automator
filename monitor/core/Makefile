@@ -13,6 +13,7 @@ WSMODULES = $(patsubst src/%.erl,%, $(SRCS))
 MODULES = $(subst $(space),$(commaspace), $(WSMODULES))
 INCLUDES += -I/usr/lib
 INCLUDES += -I../include
+INCLUDES += -I../dhcp/include
 EFLAGS += -Ddebug +debug_info
 
 all: application tests

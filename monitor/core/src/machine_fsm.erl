@@ -1,15 +1,26 @@
 -module(machine_fsm).
 -behavior(gen_fsm).
--include_lib("machine_record.hrl").
--include_lib("certentry.hrl").
+
+-include("machine_record.hrl").
+-include("certentry.hrl").
+-include("dhcp.hrl").
+
 -export([init/1, built/1, poweron/1, poweroff/1, reboot/1, delete/1]).
 -compile(export_all).
 
 -record(status, {oper, admin}).
--record(state, {id, hostname}).
+-record(state, {id, mac, hostname}).
 
-init([Id, Hostname]) ->
-    {ok, initialize, #state{id = Id, hostname = Hostname}, 0}.
+init([Id, Mac, FQDN]) ->
+    [Hostname | _] = string:tokens(FQDN, "."),
+    Domain = string:substr(FQDN, length(Hostname) + 2),
+    DHCPOptions = [
+		   {?DHO_HOST_NAME, Hostname},
+		   {?DHO_DOMAIN_NAME, Domain}
+		  ],
+    ok = dhcp_server:add_client(Mac, DHCPOptions),
+
+    {ok, initialize, #state{id=Id, mac=Mac, hostname=FQDN}, 0}.
 
 %-------------------------------------------------------
 
@@ -300,5 +311,6 @@ handle_sync_event(delete, StateName, State) ->
     {stop, terminated, ok, State}.
 
 terminate(Reason, State) ->
+    ok = dhcp_server:remove_client(State#state.mac),
     alarm_handler:clear_alarm(State#state.id).
     
