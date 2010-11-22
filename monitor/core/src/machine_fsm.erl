@@ -98,6 +98,7 @@ update_power(Host, State) ->
 
 std_timeout() -> 120000.
 puppet_timeout() -> 180000.
+sync_timeout() -> 300000.
 initial_startup_timeout() -> 300000.
 
 %-------------------------------------------------------
@@ -163,6 +164,8 @@ building(reboot, State) ->
 building(built, State) ->
     update_state(State#state.hostname, joining),
     {next_state, puppet_join, State, puppet_timeout()};
+building({puppetca, join_request}, State) ->
+    {next_state, building_joined, State, 10000};
 building(timeout, State) ->
     alarm_handler:set_alarm({State#state.id,
 			     "Timeout waiting for build completion"}), 
@@ -186,9 +189,21 @@ building_down(poweron, State) ->
     update_power(State#state.hostname, on),
     {next_state, building, State}.
 
+building_joined(built, State) ->
+    puppet_sign(State),
+    {next_state, synchronizing, State, sync_timeout()};
+building_joined(timeout, State) ->
+    alarm_handler:set_alarm({State#state.id,
+			     "Timeout waiting for build completion"}), 
+    {next_state, building_joined_failed, State}.
+
+building_joined_failed(built, State) ->
+    puppet_sign(State),
+    {next_state, synchronizing, State, sync_timeout()}.
+
 puppet_join({puppetca, join_request}, State) ->
     puppet_sign(State),
-    {next_state, synchronizing, State, 300000};
+    {next_state, synchronizing, State, sync_timeout()};
 puppet_join(poweroff, State) ->
     update_power(State#state.hostname, off),
     {next_state, puppet_down, State};
@@ -202,7 +217,7 @@ puppet_join(timeout, State) ->
 puppet_failed({puppetca, join_request}, State) ->
     alarm_handler:clear_alarm(State#state.id),
     puppet_sign(State),
-    {next_state, synchronizing, State, 300000};
+    {next_state, synchronizing, State, sync_timeout()};
 puppet_failed(reboot, State) ->
     {next_state, puppet_failed, State};
 puppet_failed(powerdown, State) ->
