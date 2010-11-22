@@ -12,6 +12,7 @@ OBJS = $(patsubst src/%.erl,$(EBINDIR)/%.beam,$(SRCS))
 WSMODULES = $(patsubst src/%.erl,%, $(SRCS))
 MODULES = $(subst $(space),$(commaspace), $(WSMODULES))
 EFLAGS += -Ddebug +debug_info
+INCLUDES += -I./include
 
 all: application tests
 
