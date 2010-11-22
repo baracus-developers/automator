@@ -252,20 +252,18 @@ find_free_address(S) ->
 	A     -> {ok, A#address{options = S#subnet.options}}
     end.
 
-select_address(_ClientId, {0, 0, 0, 0}, {0, 0, 0, 0}, S) ->
-    find_free_address(S);
 select_address(_ClientId, none, {0, 0, 0, 0}, S) ->
     find_free_address(S);
-select_address(_ClientId, LeaseIP, RequestIP, S)
-  when LeaseIP =:= RequestIP;
-       RequestIP =:= {0, 0, 0, 0} ->
-    {ok, #address{ip=LeaseIP, options=S#subnet.options}};
 select_address(_ClientId, none, IP, S) ->
     case {belongs_to_subnet(IP, S), ets:lookup(?ADDRESS, IP)} of
 	{true, [A]} when ?IS_AVAILABLE(A) ->
 	    {ok, A#address{options=S#subnet.options}};
 	_ -> find_free_address(S)
     end;
+select_address(_ClientId, LeaseIP, RequestIP, S)
+  when LeaseIP =:= RequestIP;
+       RequestIP =:= {0, 0, 0, 0} ->
+    {ok, #address{ip=LeaseIP, options=S#subnet.options}};
 select_address(ClientId, LeaseIP, RequestIP, S) ->
     release_address(ClientId, LeaseIP),
     select_address(ClientId, none, RequestIP, S).
