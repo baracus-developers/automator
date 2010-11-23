@@ -154,7 +154,7 @@ handle_call({verify, ClientId, Gateway, IP}, _From, State) ->
     end;
 handle_call({extend, ClientId, IP}, _From, State) ->
     case ets:lookup(?ADDRESS, IP) of
-	[A] when ?IS_ALLOCATED(A) ->
+	[A] when ?IS_ALLOCATED(A); ?IS_OFFERED(A) ->
 	    {reply, allocate_address(A, ClientId), State};
 	_ ->
 	    {reply, {error, "Address is not allocated."}, State}
