@@ -6,7 +6,7 @@ class erlang {
                 }
         }
 
-        zypper_repo { erlang_repo: path => 'http://download.opensuse.org/repositories/server:/messaging/openSUSE_11.2/' }
+        zypper_repo { erlang_repo: path => 'http://download.opensuse.org/repositories/home:/ghaskins:/erlang/SLE_11_SP1/' }
 
 	package { "erlang": ensure => installed, require => Zypper_repo["erlang_repo"] }
 	
