@@ -169,14 +169,33 @@ export HEART_COMMAND=/sbin/reboot
 export HOME=/root
 export LOGDIR=/var/log/agent
 
+HOSTNAME=$(hostname --long)
+if [ $? -ne 0 ]; then
+    echo "Error determining hostname: $HOSTNAME"
+    exit -1
+fi
+
+export BASE_SSL=/var/lib/puppet/ssl
+export CA_PEM=$BASE_SSL/certs/ca.pem
+export MY_PEM=$BASE_SSL/certs/$HOSTNAME.pem
+export MY_KEY=$BASE_SSL/private_keys/$HOSTNAME.pem
+
+for i in $CA_PEM $MY_PEM $MY_KEY
+do
+    if [ ! -f $i ]; then
+	echo "$i does not exist.  Please check your installation"
+	exit -1
+    fi
+done
+
 case "$1" in
     start)
-	echo -n "Starting AGENT "
+	echo -n "Starting AGENT on $HOSTNAME "
 	## Start daemon with startproc(8). If this fails
 	## the return value is set appropriately by startproc.
 	(cd /usr/sbin; tar -zxf agent.tgz)
 	mkdir -p $LOGDIR
-	run_erl -daemon /tmp $LOGDIR  "erl -boot /usr/sbin/agent -noshell -heart -pa /usr/sbin/agent/ebin -name agent -kernel net_ticktime 5 -proto_dist inet_ssl -ssl_dist_opt cacertfile /var/lib/puppet/ssl/certs/ca.pem -ssl_dist_opt server_certfile /var/lib/puppet/ssl/certs/$(hostname --long).pem -ssl_dist_opt server_keyfile /var/lib/puppet/ssl/private_keys/$(hostname --long).pem -ssl_dist_opt verify verify_peer depth 1"
+	run_erl -daemon /tmp $LOGDIR  "erl -boot /usr/sbin/agent -noshell -heart -pa /usr/sbin/agent/ebin -name agent -kernel net_ticktime 5 -proto_dist inet_ssl -ssl_dist_opt cacertfile $CA_PEM -ssl_dist_opt server_certfile $MY_PEM -ssl_dist_opt server_keyfile $MY_KEY -ssl_dist_opt verify verify_peer depth 1"
 	
         # Remember status and be verbose
 	rc_status -v
