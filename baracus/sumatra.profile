@@ -8,17 +8,17 @@
 # netmask=255.255.255.0
 # gateway=192.168.1.1
 ip=dhcp
-dnsdomain=laurelwood.net
-dns1=192.168.1.1
+dnsdomain=cloudbuilder.net
+dns1=192.168.122.1
 
 # define your modules here
 module=puppet
 
 #hardware definitions
-hardware=default
+hardware=default-vda
 
 #distro
-distro=opensuse-11.2-x86_64
+distro=sles-11.1-x86_64
 
 #autobuild
 autobuild=sumatra

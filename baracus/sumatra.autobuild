@@ -318,58 +318,6 @@ done
       <userlist></userlist>
     </group>
   </groups>
-  <host>
-    <hosts config:type="list">
-      <hosts_entry>
-        <host_address>127.0.0.1</host_address>
-        <names config:type="list">
-          <name>localhost</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>127.0.0.2</host_address>
-        <names config:type="list">
-          <name>__HOSTNAME__.__DNSDOMAIN__ __HOSTNAME__</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>::1</host_address>
-        <names config:type="list">
-          <name>localhost ipv6-localhost ipv6-loopback</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>fe00::0</host_address>
-        <names config:type="list">
-          <name>ipv6-localnet</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>ff00::0</host_address>
-        <names config:type="list">
-          <name>ipv6-mcastprefix</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>ff02::1</host_address>
-        <names config:type="list">
-          <name>ipv6-allnodes</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>ff02::2</host_address>
-        <names config:type="list">
-          <name>ipv6-allrouters</name>
-        </names>
-      </hosts_entry>
-      <hosts_entry>
-        <host_address>ff02::3</host_address>
-        <names config:type="list">
-          <name>ipv6-allhosts</name>
-        </names>
-      </hosts_entry>
-    </hosts>
-  </host>
   <iscsi-client>
     <initiatorname></initiatorname>
     <targets config:type="list"/>
@@ -422,6 +370,7 @@ done
       <dhcp_hostname config:type="boolean">true</dhcp_hostname>
       <resolv_conf_policy>auto</resolv_conf_policy>
       <write_hostname config:type="boolean">true</write_hostname>
+      <write_hostname_to_hosts config:type="boolean">false</write_hostname_to_hosts>
     </dns>
     <interfaces config:type="list">
       <interface>
