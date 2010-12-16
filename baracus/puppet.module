@@ -2,14 +2,6 @@
 
 set -e
 
-#use dig to determine the SERVER_IP -> FQDN mapping
-zypper -n in bind-utils
-server=$(dig -x __SERVER_IP__ +short | sed -e 's/\.$//')
-
-repo="http://download.opensuse.org/repositories/home:/ghaskins:/puppet/openSUSE_11.2/"
-zypper -n ar -f -c $repo puppet
-zypper -n --no-gpg-checks in puppet
-
 modifyconf() {
 	tmp=$(mktemp)
 	cat /etc/puppet/puppet.conf | sed -e $1 > $tmp
@@ -18,7 +10,6 @@ modifyconf() {
 
 modifyconf "s/\[main\]/\[main\]\n\tpluginsync=true/"
 modifyconf "s/\[agent\]/\[agent\]\n\twaitforcert=5/"
-modifyconf "s/\[agent\]/\[agent\]\n\tserver=$server/"
 
 chkconfig puppet on
 service puppet start
