@@ -4,7 +4,7 @@
 %define homedir %{_localstatedir}/lib/%{name}
 %define logdir %{_localstatedir}/log/%{name}
 
-BuildRequires: erlang yaws yaws_security nitrogen xmerl_dom
+BuildRequires: erlang yaws yaws_security nitrogen xmerl_dom epcap procket
 
 Summary: cloudbuilder - A tool to manage large scale service provisioning
 Name: cloudbuilder

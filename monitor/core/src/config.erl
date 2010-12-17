@@ -9,7 +9,16 @@ start_link() ->
     gen_server:start_link({global, ?MODULE}, ?MODULE, [], []).
 
 init(_Args) ->
-    {Xml, _} = xmerl_scan:file("/etc/cloudbuilder.conf"),
+    ConfigFile = "/etc/cloudbuilder.conf",
+    case filelib:is_file(ConfigFile) of
+	true -> ok;
+	false ->
+	    error_logger:error_msg("Could not find configuration: ~s~n",
+				   [ConfigFile]),
+	    throw(bad_environment)
+    end,
+
+    {Xml, _} = xmerl_scan:file(ConfigFile),
     [#xmlText{value=Domain}] = xmerl_xpath:string("//domain/text()", Xml),
     [#xmlText{value=Cookie}] = xmerl_xpath:string("//cookie/text()", Xml),
     [#xmlAttribute{value=AdminType}] = xmerl_xpath:string("//admin/@type", Xml),
