@@ -9,7 +9,7 @@
   {mnesia, "4.4.15"},
   {inets, "5.5"},
   {ssl, "4.0.1"},
-  {yaws, "1.88"},
+  {yaws, "1.89"},
   {crypto, "2.0.1"},
   {public_key, "0.8"},
   {eopenid, "0.1.0"},
