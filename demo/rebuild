@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pkill beam
+/home/baracus/bin/cloudbuilder-reset 
+rpmbuild --rebuild /home/baracus/cloudbuilder-0.1-1.src.rpm 
+rpm -Uvh --force /usr/src/packages/RPMS/x86_64/cloudbuilder-0.1-1.x86_64.rpm
+service cloudbuilderd start

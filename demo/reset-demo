@@ -1,0 +1,9 @@
+#!/bin/bash
+
+pkill beam
+/home/baracus/bin/cloudbuilder-reset 
+for vm in ba1 ba2 ba3 ba4; 
+do
+	virsh destroy $vm
+done
+service cloudbuilderd start

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+rm -rf /var/lib/cloudbuilder/db
+rm /var/lib/cloudbuilder/dhcp_leases.dets
+rm -f /var/lib/cloudbuilder/resolvers/*
+rm -f /var/log/cloudbuilder/*
+
+for i in $(bahost list states -q | awk '{print $1}'); do
+        bahost remove --mac $i
+        bapower remove --mac $i
+done
+
+for i in "$(puppetca -l -all | grep -v $(hostname))";
+do
+    first=$(echo $i | awk '{print $1}');
+    second=$(echo $i | awk '{print $2}');
+
+    case $first in
+	"+") puppetca -c $second;;
+	"-") puppetca -c $second;;
+	*) puppetca -c $first;;
+    esac; 
+done
+
+exit 0
