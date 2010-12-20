@@ -4,7 +4,7 @@ commaspace := ,$(space)
 
 NAME=cloudbuilder_dhcp
 VERSION=1.0
-RELEASE=0
+RELEASE=1
 OBJDIR=./obj
 EBINDIR=$(OBJDIR)/ebin
 SRCS += $(shell find src/*.erl)
