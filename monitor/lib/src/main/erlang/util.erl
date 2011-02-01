@@ -1,9 +1,6 @@
 -module(util).
 -export([os_cmd_format/2, os_cmd/2, os_cmd/1]).
--export([open_table/2, replicas/0, atomic_query/1, render_edititem/2]).
--export([template/1]).
-
--include_lib("nitrogen/include/wf.inc").
+-export([open_table/2, replicas/0, atomic_query/1]).
 
 os_cmd_format(CmdFormat, Params) ->
     EncodedCmd = io_lib:format(CmdFormat, Params),    
@@ -47,16 +44,3 @@ atomic_query(Q) ->
     {atomic, Val} = mnesia:transaction(F),
     Val.
 
-render_edititem(Id, Label) ->
-    #panel{ class="edititem",
-	    body=[
-		  #label{class="edititem-label", text=wf:f("~s: ", [Label])},
-		  #textbox{id=Id,
-			   class="edititem-input",
-			   delegate=?MODULE}
-		 ]
-	  }.
-
-template(Name) ->
-    PrivDir = code:priv_dir(cloudbuilder_ui),
-    #template { file= PrivDir ++ "/webui/templates/" ++ Name }.

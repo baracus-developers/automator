@@ -1,7 +1,7 @@
 -module(element_inventoryautomation).
 -export([reflect/0, render_element/1, event/1, sort_event/2]).
 
--import(util, [render_edititem/2]).
+-import(nitrogen_util, [render_edititem/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include_lib ("nitrogen/include/google_chart.hrl").

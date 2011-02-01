@@ -2,7 +2,7 @@
 -export([reflect/0, render_element/1, event/1]).
 -export([start_upload_event/1, finish_upload_event/4]).
 
--import(util, [render_edititem/2]).
+-import(nitrogen_util, [render_edititem/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include_lib ("nitrogen/include/google_chart.hrl").

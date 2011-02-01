@@ -1,6 +1,6 @@
 -module(element_nodestaging).
 -export([reflect/0, render_element/1, event/1, inplace_textbox_event/2]).
--import(util, [render_edititem/2]).
+-import(nitrogen_util, [render_edititem/2]).
 
 -include_lib("nitrogen/include/wf.inc").
 -include("wf_elements.hrl").
