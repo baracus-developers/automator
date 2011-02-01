@@ -5,10 +5,13 @@
   <artifactId>app</artifactId>
   <packaging>pom</packaging>
   <version>1.0.0-SNAPSHOT</version>
+  <name>Baracus CloudBuilder</name>
+
   <modules>
     <module>ui</module>
     <module>dhcp</module>
     <module>core</module>
     <module>lib</module>
+    <module>cloudbuilder</module>
   </modules>
 </project>
