@@ -58,7 +58,7 @@
 	      <artifactItems>
 		<artifactItem>
 		  <groupId>${project.groupId}</groupId>
-		  <artifactId>cloudbuilder</artifactId>
+		  <artifactId>release</artifactId>
 		  <version>${project.version}</version>
 		  <type>erlang-rel</type>
 		</artifactItem>

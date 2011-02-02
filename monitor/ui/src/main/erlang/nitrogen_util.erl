@@ -14,5 +14,5 @@ render_edititem(Id, Label) ->
 	  }.
 
 template(Name) ->
-    PrivDir = code:priv_dir(cloudbuilder_ui),
+    PrivDir = code:priv_dir(ui),
     #template { file= PrivDir ++ "/webui/templates/" ++ Name }.

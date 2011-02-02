@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.baracus-project.cloudbuilder</groupId>
-    <artifactId>app</artifactId>
+    <artifactId>cloudbuilder</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>lib</artifactId>
