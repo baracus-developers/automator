@@ -13,5 +13,6 @@
     <module>core</module>
     <module>lib</module>
     <module>cloudbuilder</module>
+    <module>rpm</module>
   </modules>
 </project>
