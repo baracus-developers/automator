@@ -13,7 +13,7 @@
     <module>core</module>
     <module>lib</module>
     <module>release</module>
-    <module>rpm</module>
+    <module>installer</module>
   </modules>
 
   <build>
