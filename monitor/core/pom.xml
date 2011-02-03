@@ -38,6 +38,7 @@
 	    <code>ssl</code>
 	    <code>crypto</code>
 	    <code>public_key</code>
+	    <code>mnesia</code>
 	  </otpDependencies>
 	  <skipDialyzer>true</skipDialyzer>
 	</configuration>
