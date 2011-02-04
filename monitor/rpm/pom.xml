@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.baracus-project.cloudbuilder</groupId>
-    <artifactId>app</artifactId>
+    <artifactId>cloudbuilder</artifactId>
     <version>1.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>rpm</artifactId>
-  <packaging>rpm</packaging>
+  <packaging>pom</packaging>
 
   <properties>
     <instdir>${project.build.directory}/installation</instdir>
@@ -15,67 +15,12 @@
   </properties>
 
   <build>
-    <plugins>
-      <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-        <artifactId>rpm-maven-plugin</artifactId>
-        <version>2.1-alpha-1</version>
-        <extensions>true</extensions>
-        <configuration>
-          <copyright>2011, Baracus Project</copyright>
-          <group>System/Monitoring</group>
-          <packager>Gregory Haskins</packager>
-          <prefix>/usr/local</prefix>
-          <changelogFile>src/changelog</changelogFile>
-          <mappings>
-            <mapping>
-              <directory>%{_libdir}/${artifact}</directory>
-              <sources>
-                <source>
-                  <location>${reldir}</location>
-                </source>
-              </sources>
-            </mapping>
-	  </mappings>
-          <preinstallScriptlet>
-            <script>echo "installing now"</script>
-          </preinstallScriptlet>
-        </configuration>
-      </plugin>
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-dependency-plugin</artifactId>
-	<executions>
-	  <execution>
-	    <id>unpack</id>
-	    <phase>generate-resources</phase>
-	    <goals>
-	      <goal>unpack</goal>
-	    </goals>
-	    <configuration>
-	      <includeTypes>erlang-rel</includeTypes>
-	      <markersDirectory>${instdir}</markersDirectory>
-	      <artifactItems>
-		<artifactItem>
-		  <groupId>${project.groupId}</groupId>
-		  <artifactId>release</artifactId>
-		  <version>${project.version}</version>
-		  <type>erlang-rel</type>
-		</artifactItem>
-	      </artifactItems>
-	      <outputDirectory>${instdir}/rel</outputDirectory>
-	    </configuration>
-	  </execution>
-	</executions>
-	<dependencies>
-	  <dependency>
-	    <groupId>eu.lindenbaum</groupId>
-	    <artifactId>maven-erlang-plugin</artifactId>
-	    <version>2.0.0-SNAPSHOT</version>
-	  </dependency>
-	</dependencies>
-      </plugin>
-    </plugins>
+    <resources>
+      <resource>
+	<directory>src/main/rpm</directory>
+	<filtering>true</filtering>
+      </resource>
+    </resources>
   </build>
 
 </project> 
