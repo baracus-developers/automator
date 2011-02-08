@@ -12,7 +12,7 @@ License: GPL
 Release: 1
 Requires: erlang puppet-server baracus
 Group: Systems Management
-Source: %{name}-${project.version}-src.tar.gz
+Source: daemon-${project.version}-src.tar.gz
 Source1: cloudbuilder-shell
 Source2: cloudbuilderd.init
 Source3: %{conf}

@@ -12,7 +12,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>cloudbuilder</artifactId>
+      <artifactId>daemon</artifactId>
       <version>${project.version}</version>
       <classifier>src</classifier>
       <type>tar.gz</type>

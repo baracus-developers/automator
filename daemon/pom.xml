@@ -1,11 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.baracus-project.cloudbuilder</groupId>
-  <artifactId>cloudbuilder</artifactId>
+  <parent>
+    <groupId>org.baracus-project.cloudbuilder</groupId>
+    <artifactId>cloudbuilder</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>daemon</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.0-SNAPSHOT</version>
-  <name>Baracus CloudBuilder</name>
+  <name>Baracus CloudBuilder Daemon</name>
 
   <modules>
     <module>ui</module>
@@ -14,7 +17,6 @@
     <module>lib</module>
     <module>release</module>
     <module>installer</module>
-    <module>rpm</module>
   </modules>
 
   <build>
