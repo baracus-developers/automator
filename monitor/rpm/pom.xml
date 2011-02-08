@@ -9,6 +9,16 @@
   <artifactId>rpm</artifactId>
   <packaging>source-rpm</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>cloudbuilder</artifactId>
+      <version>${project.version}</version>
+      <classifier>src</classifier>
+      <type>tar.gz</type>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
