@@ -7,12 +7,12 @@ BuildRequires: erlang maven
 
 Summary: cloudbuilder - A tool to manage large scale service provisioning
 Name: cloudbuilder
-Version: ${project.version}
+Version: ${project.rpmsafe.version}
 License: GPL
 Release: 1
 Requires: erlang puppet-server baracus
 Group: Systems Management
-Source: %{name}-%{version}.tar.gz
+Source: %{name}-${project.version}-src.tar.gz
 Source1: cloudbuilder-shell
 Source2: cloudbuilderd.init
 Source3: %{conf}
