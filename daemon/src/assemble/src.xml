@@ -23,6 +23,7 @@
   <fileSets>
     <fileSet>
       <includes>
+	<include>src/**</include>
 	<include>pom.xml</include>
       </includes>
     </fileSet>
