@@ -21,7 +21,7 @@
 # Reset status of this service
 rc_reset
 
-export VSN=%FINAL_VSN%
+export VSN=${project.version}
 export ROOT=%FINAL_ROOTDIR%
 export HOME=%FINAL_HOME%
 export LOGDIR=%FINAL_LOGDIR%

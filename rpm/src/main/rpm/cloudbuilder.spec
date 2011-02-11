@@ -42,7 +42,7 @@ cat %{SOURCE3} | sed "s/__COOKIE__/$uuid/" > $RPM_BUILD_ROOT/etc/%{conf}
 
 mkdir -p $RPM_BUILD_ROOT/etc/init.d
 
-cat %{SOURCE2} | sed "s|%FINAL_ROOTDIR%|%{rootdir}|" | sed "s|%FINAL_HOME%|%{homedir}|" | sed "s|%FINAL_LOGDIR%|%{logdir}|" | sed "s|%FINAL_VSN%|%{version}.%{release}|" > $RPM_BUILD_ROOT/etc/init.d/cloudbuilderd
+cat %{SOURCE2} | sed "s|%FINAL_ROOTDIR%|%{rootdir}|" | sed "s|%FINAL_HOME%|%{homedir}|" | sed "s|%FINAL_LOGDIR%|%{logdir}|" > $RPM_BUILD_ROOT/etc/init.d/cloudbuilderd
 
 chmod a+x $RPM_BUILD_ROOT/etc/init.d/cloudbuilderd
 
