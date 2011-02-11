@@ -5,7 +5,7 @@
 -include_lib("hostinfo.hrl").
 -include_lib("wf_elements.hrl").
 
-main() -> util:template("bare.html").
+main() -> nitrogen_util:template("bare.html").
 
 title() -> "Novell Cloud-Builder".
 

@@ -2,7 +2,7 @@
 -compile(export_all).
 -include_lib("nitrogen/include/wf.hrl").
 
-main() -> util:template("bare.html").
+main() -> nitrogen_util:template("bare.html").
 
 title() -> "CloudBuilder: Authentication Required".
 
